@@ -1,12 +1,12 @@
+pip install weasyprint # type: ignore
 import json
 from datetime import datetime
 import os
+from weasyprint import HTML  # Make sure WeasyPrint is installed
 
 def save_resume_to_json(data):
-    """Save resume data to a JSON file with timestamp in filename"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"resume_{timestamp}.json"
-    
     try:
         with open(filename, 'w') as f:
             json.dump(data, f, indent=2)
@@ -17,37 +17,41 @@ def save_resume_to_json(data):
         return None
 
 def generate_html_resume(data, timestamp):
-    """Generate HTML resume from template and data"""
     try:
-        # Read the HTML template
-        with open('resume_template.html', 'r') as f:
+        with open('resume_template.html', 'r', encoding='utf-8') as f:
             template = f.read()
 
-        # Replace placeholders with actual data
-        html_content = template.replace('{{ name }}', data['name'])
+        # Replace single placeholders
+        html_content = template
+        html_content = html_content.replace('{{ name }}', data['name'])
         html_content = html_content.replace('{{ email }}', data['email'])
         html_content = html_content.replace('{{ phone }}', data['phone'])
         html_content = html_content.replace('{{ education }}', data['education'])
         html_content = html_content.replace('{{ experience }}', data['experience'])
 
-        # Handle skills list
-        skills_html = ''
-        for skill in data['skills']:
-            skills_html += f'<li class="skill-item">{skill}</li>\n'
-        html_content = html_content.replace('{% for skill in skills %}\n                <li class="skill-item">{{ skill }}</li>\n                {% endfor %}', skills_html)
+        # Generate skills HTML
+        skills_html = '\n'.join([f'<li class="skill-item">{skill}</li>' for skill in data['skills']])
+        html_content = html_content.replace(
+            '{% for skill in skills %}\n          <li class="skill-item">{{ skill }}</li>\n          {% endfor %}',
+            skills_html
+        )
 
-        # Save the HTML file
-        filename = f"resume_{timestamp}.html"
-        with open(filename, 'w') as f:
+        # Save HTML file
+        html_filename = f"resume_{timestamp}.html"
+        with open(html_filename, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        print(f"✅ HTML resume generated successfully as {filename}")
-        
-        # Open the HTML file in the default browser
-        print("📂 Opening resume in your default web browser...")
-        os.system(f"python -m webbrowser {filename}")
-        
+        print(f"✅ HTML resume generated: {html_filename}")
+
+        # Optional: convert to PDF
+        pdf_filename = f"resume_{timestamp}.pdf"
+        HTML(string=html_content).write_pdf(pdf_filename)
+        print(f"✅ PDF resume generated: {pdf_filename}")
+
+        # Optional: open HTML in browser
+        os.system(f"python -m webbrowser {html_filename}")
+
     except Exception as e:
-        print(f"❌ Error generating HTML resume: {str(e)}")
+        print(f"❌ Error generating HTML/PDF: {str(e)}")
 
 def get_user_input():
     print("🧾 Welcome to the Resume Builder!")
@@ -58,7 +62,7 @@ def get_user_input():
     experience = input("Work Experience: ")
     skills = input("Skills (comma-separated): ")
 
-    resume_data = {
+    return {
         "name": name,
         "email": email,
         "phone": phone,
@@ -67,21 +71,13 @@ def get_user_input():
         "skills": [skill.strip() for skill in skills.split(",")]
     }
 
-    return resume_data
-
 def render_resume(data):
     print("\n✨ Your Resume:\n")
     print(f"{data['name']}")
     print(f"Email: {data['email']} | Phone: {data['phone']}\n")
-
-    print("🎓 Education")
-    print(data['education'], "\n")
-
-    print("💼 Experience")
-    print(data['experience'], "\n")
-
-    print("🛠 Skills")
-    print(", ".join(data['skills']))
+    print("🎓 Education\n" + data['education'] + "\n")
+    print("💼 Experience\n" + data['experience'] + "\n")
+    print("🛠 Skills\n" + ", ".join(data['skills']))
 
 def main():
     resume = get_user_input()
