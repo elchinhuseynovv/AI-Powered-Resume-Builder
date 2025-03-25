@@ -1,8 +1,59 @@
-# Ensure WeasyPrint is installed
 import json
 from datetime import datetime
 import os
-from weasyprint import HTML  # Make sure WeasyPrint is installed
+from weasyprint import HTML
+import openai
+
+# 🔐 Set your OpenAI API key here (or use environment variable)
+openai.api_key = os.getenv("OPENAI_API_KEY")  # or write directly: openai.api_key = "sk-..."
+
+def get_user_input():
+    print("🧾 Welcome to the Resume Builder!")
+    name = input("Full Name: ")
+    email = input("Email: ")
+    phone = input("Phone: ")
+    education = input("Education: ")
+    experience = input("Work Experience (describe in your own words): ")
+    skills = input("Skills (comma-separated): ")
+
+    return {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "education": education,
+        "experience": experience,
+        "skills": [skill.strip() for skill in skills.split(",")]
+    }
+
+def enhance_experience_with_ai(raw_experience):
+    print("\n🤖 Enhancing your experience section with AI...")
+
+    prompt = f"""You are a professional resume assistant. 
+Given the following plain-text work experience description, rewrite it in a polished, bullet-pointed, professional format suitable for a resume.
+
+Original:
+\"\"\"{raw_experience}\"\"\"
+
+Improved:
+"""
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+
+        improved_text = response['choices'][0]['message']['content'].strip()
+        print("✅ AI-enhanced experience received!")
+        return improved_text
+
+    except Exception as e:
+        print(f"❌ Error during AI enhancement: {str(e)}")
+        return raw_experience  # fallback
 
 def save_resume_to_json(data):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -21,9 +72,8 @@ def generate_html_resume(data, timestamp):
         with open('resume_template.html', 'r', encoding='utf-8') as f:
             template = f.read()
 
-        # Replace single placeholders
-        html_content = template
-        html_content = html_content.replace('{{ name }}', data['name'])
+        # Replace placeholders
+        html_content = template.replace('{{ name }}', data['name'])
         html_content = html_content.replace('{{ email }}', data['email'])
         html_content = html_content.replace('{{ phone }}', data['phone'])
         html_content = html_content.replace('{{ education }}', data['education'])
@@ -42,34 +92,16 @@ def generate_html_resume(data, timestamp):
             f.write(html_content)
         print(f"✅ HTML resume generated: {html_filename}")
 
-        # Optional: convert to PDF
+        # Convert to PDF
         pdf_filename = f"resume_{timestamp}.pdf"
         HTML(string=html_content).write_pdf(pdf_filename)
         print(f"✅ PDF resume generated: {pdf_filename}")
 
-        # Optional: open HTML in browser
+        # Open in browser
         os.system(f"python -m webbrowser {html_filename}")
 
     except Exception as e:
         print(f"❌ Error generating HTML/PDF: {str(e)}")
-
-def get_user_input():
-    print("🧾 Welcome to the Resume Builder!")
-    name = input("Full Name: ")
-    email = input("Email: ")
-    phone = input("Phone: ")
-    education = input("Education: ")
-    experience = input("Work Experience: ")
-    skills = input("Skills (comma-separated): ")
-
-    return {
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "education": education,
-        "experience": experience,
-        "skills": [skill.strip() for skill in skills.split(",")]
-    }
 
 def render_resume(data):
     print("\n✨ Your Resume:\n")
@@ -81,6 +113,7 @@ def render_resume(data):
 
 def main():
     resume = get_user_input()
+    resume["experience"] = enhance_experience_with_ai(resume["experience"])
     render_resume(resume)
     timestamp = save_resume_to_json(resume)
     if timestamp:
@@ -88,40 +121,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# Ensure OpenAI is installed
-import openai
-import os
-
-# You can load your API key securely from an environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")  # or just write the key directly here (not recommended for security)
-
-def enhance_experience_with_ai(raw_experience):
-    print("\n🤖 Enhancing your experience section with AI...")
-
-    prompt = f"""You are a professional resume assistant. 
-Given the following plain-text work experience description, rewrite it in a polished, bullet-pointed, professional format suitable for a resume.
-
-Original:
-\"\"\"{raw_experience}\"\"\"
-
-Improved:
-"""
-
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # You can change to "gpt-4" if available
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=300
-        )
-
-        improved_text = response['choices'][0]['message']['content'].strip()
-        print("✅ AI-enhanced experience received!")
-        return improved_text
-
-    except Exception as e:
-        print(f"❌ Error during AI enhancement: {str(e)}")
-        return raw_experience  # fallback to original
