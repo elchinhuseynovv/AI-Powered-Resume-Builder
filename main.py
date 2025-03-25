@@ -1,4 +1,4 @@
-pip install weasyprint # type: ignore
+# Ensure WeasyPrint is installed
 import json
 from datetime import datetime
 import os
@@ -88,3 +88,40 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Ensure OpenAI is installed
+import openai
+import os
+
+# You can load your API key securely from an environment variable
+openai.api_key = os.getenv("OPENAI_API_KEY")  # or just write the key directly here (not recommended for security)
+
+def enhance_experience_with_ai(raw_experience):
+    print("\n🤖 Enhancing your experience section with AI...")
+
+    prompt = f"""You are a professional resume assistant. 
+Given the following plain-text work experience description, rewrite it in a polished, bullet-pointed, professional format suitable for a resume.
+
+Original:
+\"\"\"{raw_experience}\"\"\"
+
+Improved:
+"""
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # You can change to "gpt-4" if available
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+
+        improved_text = response['choices'][0]['message']['content'].strip()
+        print("✅ AI-enhanced experience received!")
+        return improved_text
+
+    except Exception as e:
+        print(f"❌ Error during AI enhancement: {str(e)}")
+        return raw_experience  # fallback to original
