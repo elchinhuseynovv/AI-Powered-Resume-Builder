@@ -260,3 +260,76 @@ def create_resume():
         
         html_content = render_template('resume_template.html', **data)
         
+        file_info = save_files(data, html_content)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Resume created successfully!',
+            'timestamp': file_info['timestamp'],
+            'analysis': file_info['analysis']
+        })
+    
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
+    except Exception as e:
+        print(f"Resume Creation Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error creating resume: {str(e)}'
+        }), 500
+
+@app.route('/analyze_resume', methods=['POST'])
+def analyze_resume():
+    try:
+        data = request.get_json()
+        if not data:
+            raise ValueError("No data provided")
+        
+        analysis = score_resume(data)
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
+
+@app.route('/download/<timestamp>/<file_type>')
+def download_file(timestamp, file_type):
+    if not re.match(r'^\d{8}_\d{6}$', timestamp):
+        return 'Invalid timestamp format', 400
+        
+    file_mapping = {
+        'pdf': f'output/resume_{timestamp}.pdf',
+        'html': f'output/resume_{timestamp}.html',
+        'json': f'output/resume_{timestamp}.json',
+        'cover_letter': f'output/cover_letter_{timestamp}.txt',
+        'analysis': f'output/analysis_{timestamp}.json'
+    }
+    
+    if file_type not in file_mapping:
+        return 'Invalid file type', 400
+    
+    file_path = file_mapping[file_type]
+    if not os.path.exists(file_path):
+        return 'File not found', 404
+    
+    try:
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=os.path.basename(file_path)
+        )
+    except Exception as e:
+        print(f"File Download Error: {str(e)}")
+        return 'Error downloading file', 500
+
+if __name__ == '__main__':
+    if not os.getenv("OPENAI_API_KEY"):
+        print("Warning: OPENAI_API_KEY not found in environment variables")
+    app.run(debug=True)
