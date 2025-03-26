@@ -56,3 +56,41 @@
             font-size: 0.9em;
         }
         @media print {
+            body {
+                margin: 0;
+                background: none;
+            }
+            .resume {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume">
+        <div class="header">
+            <h1 class="name">{{ name }}</h1>
+            <div class="contact">{{ email }} | {{ phone }}</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Education</h2>
+            <div class="content">{{ education }}</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Experience</h2>
+            <div class="content">{{ experience | safe }}</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Skills</h2>
+            <ul class="skills-list">
+                {% for skill in skills %}
+                <li class="skill-item">{{ skill }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
