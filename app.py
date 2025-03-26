@@ -3,6 +3,7 @@ from flask_cors import CORS
 from datetime import datetime
 import json
 import os
+import re
 from weasyprint import HTML
 import openai
 from dotenv import load_dotenv
@@ -14,6 +15,14 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 CORS(app)
 
+def sanitize_input(text):
+    """Remove any potentially harmful characters"""
+    if not text:
+        return ""
+    # Remove any HTML tags and special characters
+    text = re.sub(r'<[^>]+>', '', text)
+    return text.strip()
+
 def validate_input(data):
     required_fields = ['name', 'email', 'phone', 'job_title', 'company', 'education', 'experience', 'skills']
     for field in required_fields:
@@ -21,8 +30,14 @@ def validate_input(data):
             raise ValueError(f"Missing required field: {field}")
     
     # Validate email format
-    if '@' not in data['email']:
+    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    if not email_pattern.match(data['email']):
         raise ValueError("Invalid email format")
+    
+    # Validate phone format (basic validation)
+    phone = re.sub(r'\D', '', data['phone'])  # Remove non-digits
+    if len(phone) < 10:
+        raise ValueError("Phone number must have at least 10 digits")
     
     return True
 
@@ -30,11 +45,14 @@ def enhance_experience_with_ai(raw_experience):
     if not raw_experience:
         return "No experience provided"
         
+    # Sanitize input before sending to AI
+    sanitized_experience = sanitize_input(raw_experience)
+        
     prompt = f"""
 You are a professional resume assistant.
 Rewrite the following work experience into bullet points using strong action verbs and a professional tone:
 
-\"\"\"{raw_experience}\"\"\"
+\"\"\"{sanitized_experience}\"\"\"
 """
     try:
         response = openai.ChatCompletion.create(
@@ -45,7 +63,8 @@ Rewrite the following work experience into bullet points using strong action ver
         )
         return response['choices'][0]['message']['content'].strip()
     except Exception as e:
-        return f"Error enhancing experience: {str(e)}"
+        print(f"AI Enhancement Error: {str(e)}")
+        return raw_experience  # Return original text if AI enhancement fails
 
 def generate_cover_letter(data):
     prompt = f"""
@@ -67,7 +86,8 @@ Use the following candidate info:
         )
         return response['choices'][0]['message']['content'].strip()
     except Exception as e:
-        return f"Error generating cover letter: {str(e)}"
+        print(f"Cover Letter Generation Error: {str(e)}")
+        return f"Error generating cover letter. Please try again later."
 
 def save_files(data, html_content):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -106,6 +126,7 @@ def save_files(data, html_content):
             }
         }
     except Exception as e:
+        print(f"File Save Error: {str(e)}")
         raise Exception(f"Error saving files: {str(e)}")
 
 @app.route('/')
@@ -115,13 +136,21 @@ def index():
 @app.route('/create_resume', methods=['POST'])
 def create_resume():
     try:
-        data = request.form.to_dict()
+        # Get and sanitize form data
+        data = {
+            key: sanitize_input(value)
+            for key, value in request.form.to_dict().items()
+        }
         
         # Validate input
         validate_input(data)
         
         # Process skills
-        data['skills'] = [skill.strip() for skill in data.get('skills', '').split(',') if skill.strip()]
+        data['skills'] = [
+            skill.strip() 
+            for skill in data.get('skills', '').split(',') 
+            if skill.strip()
+        ]
         
         if not data['skills']:
             raise ValueError("At least one skill is required")
@@ -147,6 +176,7 @@ def create_resume():
             'message': str(e)
         }), 400
     except Exception as e:
+        print(f"Resume Creation Error: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'Error creating resume: {str(e)}'
@@ -154,6 +184,10 @@ def create_resume():
 
 @app.route('/download/<timestamp>/<file_type>')
 def download_file(timestamp, file_type):
+    # Validate timestamp format
+    if not re.match(r'^\d{8}_\d{6}$', timestamp):
+        return 'Invalid timestamp format', 400
+        
     file_mapping = {
         'pdf': f'output/resume_{timestamp}.pdf',
         'html': f'output/resume_{timestamp}.html',
@@ -168,7 +202,15 @@ def download_file(timestamp, file_type):
     if not os.path.exists(file_path):
         return 'File not found', 404
     
-    return send_file(file_path, as_attachment=True)
+    try:
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=os.path.basename(file_path)
+        )
+    except Exception as e:
+        print(f"File Download Error: {str(e)}")
+        return 'Error downloading file', 500
 
 if __name__ == '__main__':
     if not os.getenv("OPENAI_API_KEY"):
