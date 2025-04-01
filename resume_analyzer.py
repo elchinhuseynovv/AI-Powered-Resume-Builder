@@ -122,3 +122,9 @@ class ResumeAnalyzer:
         if not re.search(r'\d+', data['experience']):
             issues.append('Include more quantifiable achievements')
             score -= 10
+            
+        return {
+            'score': max(score, 0),
+            'issues': issues,
+            'is_ats_friendly': score >= 80
+        }
