@@ -104,3 +104,21 @@ class ResumeAnalyzer:
         scores.append(contact_score * 0.1)  # 10% weight
         
         return min(int(sum(scores)), 100)
+
+    def _check_ats_compatibility(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Check resume compatibility with ATS systems."""
+        issues = []
+        score = 100
+        
+        # Check for common ATS issues
+        if len(data['experience'].split()) < 50:
+            issues.append('Experience section might be too brief for ATS parsing')
+            score -= 20
+            
+        if len(data['skills']) < 5:
+            issues.append('Add more relevant skills for better ATS matching')
+            score -= 15
+            
+        if not re.search(r'\d+', data['experience']):
+            issues.append('Include more quantifiable achievements')
+            score -= 10
