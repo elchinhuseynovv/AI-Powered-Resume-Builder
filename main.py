@@ -283,3 +283,34 @@ Candidate Info:
 def main():
     builder = ResumeBuilder()
     
+    try:
+        # Get and validate input
+        resume_data = builder.get_user_input()
+        
+        # Enhance experience with AI
+        resume_data['experience'] = builder.enhance_experience_with_ai(resume_data['experience'])
+        
+        # Save resume
+        timestamp = builder.save_resume(resume_data)
+        if timestamp:
+            # Generate cover letter
+            builder.generate_cover_letter(resume_data, timestamp)
+            
+            # Analyze resume
+            analysis = builder.analyze_resume(resume_data)
+            
+            # Save analysis
+            analysis_path = os.path.join(builder.output_dir, f"analysis_{timestamp}.json")
+            with open(analysis_path, 'w', encoding='utf-8') as f:
+                json.dump(analysis, f, indent=2)
+            
+            print("\n📊 Resume Analysis:")
+            print(f"Overall Score: {analysis['content_score']['overall_score']:.1f}/100")
+            print("\nTop Keywords:")
+            for keyword, count in analysis['keyword_analysis']['top_keywords'][:5]:
+                print(f"- {keyword}: {count} occurrences")
+            
+            if analysis['improvement_suggestions']:
+                print("\n💡 Suggestions for Improvement:")
+                for suggestion in analysis['improvement_suggestions']:
+                    print(f"- {suggestion}")
