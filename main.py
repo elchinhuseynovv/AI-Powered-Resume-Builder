@@ -314,3 +314,10 @@ def main():
                 print("\n💡 Suggestions for Improvement:")
                 for suggestion in analysis['improvement_suggestions']:
                     print(f"- {suggestion}")
+                    
+    except Exception as e:
+        logger.error(f"Error in resume creation: {e}")
+        print("\n❌ An error occurred while creating your resume. Please try again.")
+
+if __name__ == "__main__":
+    main()
