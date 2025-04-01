@@ -70,4 +70,37 @@ class ResumeAnalyzer:
         
         return scores
 
-  
+    def _score_experience(self, experience: str) -> int:
+        """Score the experience section based on various factors."""
+        words = experience.split()
+        metrics = re.findall(r'\d+%|\$\d+|\d+ years?', experience.lower())
+        action_verbs_used = sum(1 for word in words if word.lower() in self.action_verbs)
+        
+        length_score = min(len(words) / 10, 50)
+        action_verbs_score = min(action_verbs_used * 5, 30)
+        metrics_score = min(len(metrics) * 10, 20)
+        
+        total_score = length_score + action_verbs_score + metrics_score
+        return min(int(total_score), 100)
+
+    def _calculate_overall_quality(self, data: Dict[str, Union[str, List[str]]]) -> int:
+        """Calculate overall resume quality score."""
+        scores = []
+        
+        # Experience quality
+        exp_score = self._score_experience(data['experience'])
+        scores.append(exp_score * 0.4)  # 40% weight
+        
+        # Skills breadth
+        skills_score = min(len(data['skills']) * 10, 100)
+        scores.append(skills_score * 0.3)  # 30% weight
+        
+        # Education completeness
+        edu_score = min(len(data['education'].split('\n')) * 25, 100)
+        scores.append(edu_score * 0.2)  # 20% weight
+        
+        # Contact information completeness
+        contact_score = 100 if all([data['email'], data['phone']]) else 50
+        scores.append(contact_score * 0.1)  # 10% weight
+        
+        return min(int(sum(scores)), 100)
