@@ -128,3 +128,37 @@ class ResumeAnalyzer:
             'issues': issues,
             'is_ats_friendly': score >= 80
         }
+
+    def _analyze_industry_alignment(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Analyze alignment with industry keywords."""
+        text = f"{data['experience'].lower()} {' '.join(data['skills']).lower()}"
+        matches = {}
+        
+        for industry, keywords in self.industry_keywords.items():
+            count = sum(1 for keyword in keywords if keyword in text)
+            matches[industry] = {
+                'match_score': min(count * 20, 100),
+                'matched_keywords': [k for k in keywords if k in text]
+            }
+            
+        best_match = max(matches.items(), key=lambda x: x[1]['match_score'])
+        
+        return {
+            'industry_matches': matches,
+            'best_match': {
+                'industry': best_match[0],
+                'score': best_match[1]['match_score']
+            }
+        }
+
+    def _analyze_action_verbs(self, experience: str) -> Dict:
+        """Analyze the usage of action verbs in experience."""
+        words = word_tokenize(experience.lower())
+        used_verbs = [word for word in words if word in self.action_verbs]
+        
+        return {
+            'total_used': len(used_verbs),
+            'unique_used': len(set(used_verbs)),
+            'verbs_found': list(set(used_verbs)),
+            'suggestions': [verb for verb in self.action_verbs if verb not in used_verbs][:5]
+        }
