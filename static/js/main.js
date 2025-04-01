@@ -145,3 +145,12 @@ function validateForm(formData) {
     }
   });
   
+  // Initialize real-time preview
+  document.querySelectorAll('#resumeForm input, #resumeForm textarea')?.forEach(input => {
+    input.addEventListener('input', (e) => {
+      const form = e.target.form;
+      if (form) {
+        updatePreview(new FormData(form));
+      }
+    });
+  });
