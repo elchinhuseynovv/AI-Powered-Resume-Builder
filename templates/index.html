@@ -5,116 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Resume Builder</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold text-center mb-8">🧾 AI Resume Builder</h1>
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">🧾 AI Resume Builder</h1>
+            <p class="text-gray-600">Create a professional resume with AI-powered enhancements</p>
+        </header>
+
+        <div id="alert-container" class="fixed top-4 right-4 z-50"></div>
         
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-            <form id="resumeForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Form Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <form id="resumeForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" name="phone" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="job_title" required placeholder="e.g., Software Developer" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Target Company</label>
+                            <input type="text" name="company" required placeholder="For cover letter" class="form-input">
+                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Education</label>
+                        <textarea name="education" required rows="3" class="form-input"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Work Experience</label>
+                        <div class="text-xs text-gray-500 mb-2">Will be enhanced with AI</div>
+                        <textarea name="experience" required rows="5" class="form-input"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Skills</label>
+                        <div class="text-xs text-gray-500 mb-2">Comma-separated list</div>
+                        <input type="text" name="skills" required placeholder="Python, JavaScript, React, etc." class="form-input">
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-full">
+                            Generate Resume
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Live Preview</h2>
+                <div id="resume-preview" class="resume-preview"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden mt-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Your Resume is Ready!</h2>
+                <div class="space-y-4">
+                    <div id="downloadLinks" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Phone</label>
-                        <input type="tel" name="phone" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Job Title</label>
-                        <input type="text" name="job_title" required placeholder="e.g., Software Developer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Target Company</label>
-                        <input type="text" name="company" required placeholder="For cover letter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-xl font-semibold mb-3">Resume Analysis</h3>
+                        <div id="analysisResults"></div>
                     </div>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Education</label>
-                    <textarea name="education" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Work Experience</label>
-                    <div class="text-xs text-gray-500 mb-2">Will be enhanced with AI</div>
-                    <textarea name="experience" required rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Skills</label>
-                    <div class="text-xs text-gray-500 mb-2">Comma-separated list</div>
-                    <input type="text" name="skills" required placeholder="Python, JavaScript, React, etc." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div class="flex items-center justify-between pt-4">
-                    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Generate Resume
-                    </button>
-                    <div id="spinner" class="hidden">
-                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Results Section -->
-            <div id="results" class="hidden mt-8 p-4 bg-gray-50 rounded-md">
-                <h2 class="text-xl font-semibold mb-4">Download Your Files:</h2>
-                <div class="space-y-3" id="downloadLinks"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        document.getElementById('resumeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const form = e.target;
-            const spinner = document.getElementById('spinner');
-            const results = document.getElementById('results');
-            const downloadLinks = document.getElementById('downloadLinks');
-            
-            // Show spinner
-            spinner.classList.remove('hidden');
-            results.classList.add('hidden');
-            
-            try {
-                const response = await fetch('/create_resume', {
-                    method: 'POST',
-                    body: new FormData(form)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Create download links
-                    downloadLinks.innerHTML = `
-                        <div class="flex flex-col space-y-2">
-                            <a href="/download/${data.timestamp}/pdf" class="text-blue-500 hover:text-blue-700">📄 Download PDF Resume</a>
-                            <a href="/download/${data.timestamp}/html" class="text-blue-500 hover:text-blue-700">🌐 Download HTML Resume</a>
-                            <a href="/download/${data.timestamp}/cover_letter" class="text-blue-500 hover:text-blue-700">📝 Download Cover Letter</a>
-                            <a href="/download/${data.timestamp}/json" class="text-blue-500 hover:text-blue-700">🔧 Download Resume Data (JSON)</a>
-                        </div>
-                    `;
-                    results.classList.remove('hidden');
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (error) {
-                alert('Error creating resume: ' + error.message);
-            } finally {
-                spinner.classList.add('hidden');
-            }
-        });
-    </script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>
