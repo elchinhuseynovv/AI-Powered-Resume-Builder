@@ -4,148 +4,111 @@ import os
 from weasyprint import HTML
 import openai
 from dotenv import load_dotenv
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import requests
+from bs4 import BeautifulSoup
+import re
+import logging
+from typing import Dict, List, Optional, Tuple, Union
 
-# 🔐 Load .env file for API key
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables and NLTK data
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 
-def get_user_input():
-    print("🧾 Welcome to the Resume Builder!")
-    name = input("Full Name: ")
-    email = input("Email: ")
-    phone = input("Phone: ")
-    job_title = input("Job Title (e.g., Software Developer): ")
-    company = input("Target Company (for cover letter): ")
-    education = input("Education: ")
-    experience = input("Work Experience: ")
-    skills = input("Skills (comma-separated): ")
+class ResumeBuilder:
+    def __init__(self):
+        self.output_dir = "output"
+        os.makedirs(self.output_dir, exist_ok=True)
 
-    return {
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "job_title": job_title,
-        "company": company,
-        "education": education,
-        "experience": experience,
-        "skills": [skill.strip() for skill in skills.split(",")]
-    }
+    def get_user_input(self) -> Dict[str, Union[str, List[str]]]:
+        """Get user input for resume creation with improved validation."""
+        print("🧾 Welcome to the Enhanced Resume Builder!")
+        
+        inputs = {
+            "name": self._get_validated_input("Full Name: ", self._validate_name),
+            "email": self._get_validated_input("Email: ", self._validate_email),
+            "phone": self._get_validated_input("Phone: ", self._validate_phone),
+            "job_title": input("Job Title (e.g., Software Developer): ").strip(),
+            "company": input("Target Company (for cover letter): ").strip(),
+            "education": self._get_education_input(),
+            "experience": input("Work Experience: ").strip(),
+            "skills": self._get_skills_input()
+        }
+        
+        return inputs
 
-def enhance_experience_with_ai(raw_experience):
-    print("\n🤖 Enhancing your experience section with AI...")
-    prompt = f"""
-You are a professional resume assistant.
-Rewrite the following work experience into bullet points using strong action verbs and a professional tone:
+    def _get_validated_input(self, prompt: str, validator_func) -> str:
+        """Get user input with validation."""
+        while True:
+            value = input(prompt).strip()
+            try:
+                validator_func(value)
+                return value
+            except ValueError as e:
+                print(f"❌ {str(e)}")
 
-\"\"\"{raw_experience}\"\"\"
-"""
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=300
-        )
-        return response['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        print(f"❌ Error enhancing experience: {e}")
-        return raw_experience
+    def _validate_name(self, name: str) -> None:
+        """Validate name input."""
+        if not name:
+            raise ValueError("Name cannot be empty")
+        if not re.match(r'^[a-zA-Z\s\'-]+$', name):
+            raise ValueError("Name can only contain letters, spaces, hyphens, and apostrophes")
 
-def generate_cover_letter(data, timestamp):
-    print("\n📝 Generating AI-powered cover letter...")
-    prompt = f"""
-Write a professional and personalized cover letter for a {data['job_title']} position at {data['company']}.
-Use the following candidate info:
-- Name: {data['name']}
-- Email: {data['email']}
-- Phone: {data['phone']}
-- Education: {data['education']}
-- Experience: {data['experience']}
-- Skills: {', '.join(data['skills'])}
-"""
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=500
-        )
-        cover_letter = response['choices'][0]['message']['content'].strip()
+    def _validate_email(self, email: str) -> None:
+        """Validate email format."""
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            raise ValueError("Invalid email format")
 
-        filename = f"cover_letter_{timestamp}.txt"
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(cover_letter)
+    def _validate_phone(self, phone: str) -> None:
+        """Validate phone number."""
+        digits = re.sub(r'\D', '', phone)
+        if len(digits) < 10:
+            raise ValueError("Phone number must have at least 10 digits")
 
-        print(f"✅ Cover letter saved as {filename}")
-        return cover_letter
+    def _get_education_input(self) -> str:
+        """Get structured education input."""
+        print("\n📚 Education Information")
+        education_entries = []
+        
+        while True:
+            degree = input("Degree (or 'done' to finish): ").strip()
+            if degree.lower() == 'done':
+                break
+                
+            institution = input("Institution: ").strip()
+            year = input("Year: ").strip()
+            
+            entry = f"{degree} - {institution} ({year})"
+            education_entries.append(entry)
+            
+        return "\n".join(education_entries)
 
-    except Exception as e:
-        print(f"❌ Error generating cover letter: {e}")
-        return ""
+    def _get_skills_input(self) -> List[str]:
+        """Get and validate skills input."""
+        while True:
+            skills_input = input("Skills (comma-separated): ").strip()
+            skills = [skill.strip() for skill in skills_input.split(",") if skill.strip()]
+            
+            if not skills:
+                print("❌ Please enter at least one skill")
+                continue
+                
+            return skills
 
-def save_resume_to_json(data):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"resume_{timestamp}.json"
-    try:
-        with open(filename, 'w') as f:
-            json.dump(data, f, indent=2)
-        print(f"✅ Resume data saved as {filename}")
-        return timestamp
-    except Exception as e:
-        print(f"❌ Error saving JSON: {e}")
-        return None
-
-def generate_html_resume(data, timestamp):
-    try:
-        with open('resume_template.html', 'r', encoding='utf-8') as f:
-            template = f.read()
-
-        # Replace placeholders
-        html_content = template.replace('{{ name }}', data['name'])
-        html_content = html_content.replace('{{ email }}', data['email'])
-        html_content = html_content.replace('{{ phone }}', data['phone'])
-        html_content = html_content.replace('{{ education }}', data['education'])
-        html_content = html_content.replace('{{ experience }}', data['experience'])
-
-        # Skills HTML
-        skills_html = '\n'.join([f'<li class="skill-item">{skill}</li>' for skill in data['skills']])
-        html_content = html_content.replace(
-            '{% for skill in skills %}\n          <li class="skill-item">{{ skill }}</li>\n          {% endfor %}',
-            skills_html
-        )
-
-        html_filename = f"resume_{timestamp}.html"
-        with open(html_filename, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print(f"✅ HTML resume saved as {html_filename}")
-
-        # PDF
-        pdf_filename = f"resume_{timestamp}.pdf"
-        HTML(string=html_content).write_pdf(pdf_filename)
-        print(f"✅ PDF resume saved as {pdf_filename}")
-
-        # Open HTML in browser
-        os.system(f"python -m webbrowser {html_filename}")
-
-    except Exception as e:
-        print(f"❌ Error creating HTML/PDF: {e}")
-
-def render_resume(data):
-    print("\n✨ Your Resume:\n")
-    print(f"{data['name']} — {data['job_title']}")
-    print(f"Email: {data['email']} | Phone: {data['phone']}")
-    print("\n🎓 Education\n" + data['education'])
-    print("\n💼 Experience\n" + data['experience'])
-    print("\n🛠 Skills\n" + ", ".join(data['skills']))
-
-def main():
-    resume = get_user_input()
-    resume["experience"] = enhance_experience_with_ai(resume["experience"])
-    render_resume(resume)
-    timestamp = save_resume_to_json(resume)
-    if timestamp:
-        generate_html_resume(resume, timestamp)
-        generate_cover_letter(resume, timestamp)
-
-if __name__ == "__main__":
-    main()
+    def enhance_experience_with_ai(self, raw_experience: str) -> str:
+        """Enhance work experience using AI with improved prompt."""
+        print("\n🤖 Enhancing your experience section with AI...")
+        
+        prompt = f"""
