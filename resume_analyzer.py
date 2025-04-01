@@ -162,3 +162,32 @@ class ResumeAnalyzer:
             'verbs_found': list(set(used_verbs)),
             'suggestions': [verb for verb in self.action_verbs if verb not in used_verbs][:5]
         }
+
+    def _generate_suggestions(self, data: Dict[str, Union[str, List[str]]]) -> List[str]:
+        """Generate detailed improvement suggestions."""
+        suggestions = []
+        
+        # Experience section suggestions
+        exp_words = len(data['experience'].split())
+        if exp_words < 100:
+            suggestions.append('Add more detail to your work experience (aim for 200-300 words)')
+        elif exp_words > 500:
+            suggestions.append('Consider condensing your experience section for better readability')
+            
+        # Skills suggestions
+        if len(data['skills']) < 5:
+            suggestions.append('Add more relevant skills (aim for 8-12 key skills)')
+        elif len(data['skills']) > 15:
+            suggestions.append('Consider focusing on your most relevant and strongest skills')
+            
+        # Action verbs usage
+        action_verbs_used = sum(1 for word in data['experience'].split() 
+                               if word.lower() in self.action_verbs)
+        if action_verbs_used < 5:
+            suggestions.append('Use more action verbs to describe your experiences')
+            
+        # Metrics and achievements
+        if not re.search(r'\d+%|\$\d+|\d+ years?', data['experience']):
+            suggestions.append('Add quantifiable achievements (e.g., percentages, numbers, metrics)')
+            
+        return suggestions
