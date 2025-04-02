@@ -67,3 +67,43 @@ Rewrite the following work experience into bullet points using strong action ver
     except Exception as e:
         logger.error(f"AI Enhancement Error: {str(e)}")
         return raw_experience
+
+def generate_cover_letter(data: Dict[str, Union[str, List[str]]]) -> str:
+    """Generate a cover letter using OpenAI GPT-3.5."""
+    prompt = f"""
+Write a professional and personalized cover letter for a {data['job_title']} position at {data['company']}.
+Use the following candidate info:
+- Name: {data['name']}
+- Email: {data['email']}
+- Phone: {data['phone']}
+- Education: {data['education']}
+- Experience: {data['experience']}
+- Skills: {', '.join(data['skills'])}
+"""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=500
+        )
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        logger.error(f"Cover Letter Generation Error: {str(e)}")
+        return "Error generating cover letter. Please try again later."
+
+def generate_pdf(html_content: str, output_path: str) -> bool:
+    """Generate PDF from HTML content."""
+    try:
+        HTML(string=html_content).write_pdf(output_path)
+        return True
+    except Exception as e:
+        logger.error(f"PDF Generation Error: {str(e)}")
+        return False
+
+def save_files(data: Dict[str, Union[str, List[str]]], html_content: str, output_dir: str = "output") -> Optional[Dict]:
+    """Save resume files in multiple formats."""
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = data.get('timestamp', '')
+        
