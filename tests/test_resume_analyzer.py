@@ -85,3 +85,27 @@ def test_action_verbs_analysis(analyzer, sample_data):
     assert 'unique_used' in verbs_analysis
     assert 'verbs_found' in verbs_analysis
     assert 'suggestions' in verbs_analysis
+
+def test_generate_suggestions(analyzer, sample_data):
+    """Test suggestion generation."""
+    suggestions = analyzer._generate_suggestions(sample_data)
+    
+    assert isinstance(suggestions, list)
+    assert all(isinstance(suggestion, str) for suggestion in suggestions)
+
+def test_empty_experience(analyzer):
+    """Test handling of empty experience."""
+    data = {
+        'experience': '',
+        'skills': ['Python'],
+        'education': 'BS Degree'
+    }
+    analysis = analyzer.analyze_resume(data)
+    
+    assert isinstance(analysis, dict)
+    assert 'error' not in analysis
+
+def test_invalid_data(analyzer):
+    """Test handling of invalid data."""
+    with pytest.raises(Exception):
+        analyzer.analyze_resume(None)
