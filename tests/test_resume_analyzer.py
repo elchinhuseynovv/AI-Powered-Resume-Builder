@@ -54,3 +54,34 @@ def test_score_experience(analyzer):
     
     assert isinstance(score, int)
     assert 0 <= score <= 100
+
+def test_ats_compatibility(analyzer, sample_data):
+    """Test ATS compatibility check."""
+    ats_analysis = analyzer._check_ats_compatibility(sample_data)
+    
+    assert isinstance(ats_analysis, dict)
+    assert 'score' in ats_analysis
+    assert 'issues' in ats_analysis
+    assert 'is_ats_friendly' in ats_analysis
+    assert isinstance(ats_analysis['score'], int)
+    assert isinstance(ats_analysis['issues'], list)
+    assert isinstance(ats_analysis['is_ats_friendly'], bool)
+
+def test_industry_alignment(analyzer, sample_data):
+    """Test industry alignment analysis."""
+    alignment = analyzer._analyze_industry_alignment(sample_data)
+    
+    assert isinstance(alignment, dict)
+    assert 'industry_matches' in alignment
+    assert 'best_match' in alignment
+    assert isinstance(alignment['best_match']['score'], int)
+
+def test_action_verbs_analysis(analyzer, sample_data):
+    """Test action verbs analysis."""
+    verbs_analysis = analyzer._analyze_action_verbs(sample_data['experience'])
+    
+    assert isinstance(verbs_analysis, dict)
+    assert 'total_used' in verbs_analysis
+    assert 'unique_used' in verbs_analysis
+    assert 'verbs_found' in verbs_analysis
+    assert 'suggestions' in verbs_analysis
