@@ -107,3 +107,34 @@ def save_files(data: Dict[str, Union[str, List[str]]], html_content: str, output
         os.makedirs(output_dir, exist_ok=True)
         timestamp = data.get('timestamp', '')
         
+        # Save JSON
+        json_path = os.path.join(output_dir, f"resume_{timestamp}.json")
+        with open(json_path, 'w', encoding='utf-8') as f:
+            import json
+            json.dump(data, f, indent=2)
+        
+        # Save HTML
+        html_path = os.path.join(output_dir, f"resume_{timestamp}.html")
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        # Generate PDF
+        pdf_path = os.path.join(output_dir, f"resume_{timestamp}.pdf")
+        if not generate_pdf(html_content, pdf_path):
+            raise Exception("Failed to generate PDF")
+        
+        # Generate and save cover letter
+        cover_letter = generate_cover_letter(data)
+        cover_letter_path = os.path.join(output_dir, f"cover_letter_{timestamp}.txt")
+        with open(cover_letter_path, 'w', encoding='utf-8') as f:
+            f.write(cover_letter)
+        
+        return {
+            'json_path': json_path,
+            'html_path': html_path,
+            'pdf_path': pdf_path,
+            'cover_letter_path': cover_letter_path
+        }
+    except Exception as e:
+        logger.error(f"File Save Error: {str(e)}")
+        return None
