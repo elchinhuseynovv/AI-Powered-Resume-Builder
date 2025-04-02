@@ -116,3 +116,32 @@ class ResumeFormatter:
             formatted_text = re.sub(pattern, replacement, formatted_text)
         
         return formatted_text
+
+    def apply_style_guide(self, data: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
+        """Apply consistent styling across the resume."""
+        styled_data = data.copy()
+        
+        # Consistent capitalization
+        styled_data['name'] = styled_data['name'].title()
+        styled_data['job_title'] = styled_data['job_title'].title()
+        
+        # Format phone number
+        styled_data['phone'] = self._format_phone_number(styled_data['phone'])
+        
+        # Format email to lowercase
+        styled_data['email'] = styled_data['email'].lower()
+        
+        return styled_data
+
+    def _format_phone_number(self, phone: str) -> str:
+        """Format phone number consistently."""
+        # Remove all non-numeric characters
+        digits = re.sub(r'\D', '', phone)
+        
+        # Format based on length
+        if len(digits) == 10:
+            return f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+        elif len(digits) == 11 and digits[0] == '1':
+            return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:]}"
+        else:
+            return phone  # Return original if format unknown
