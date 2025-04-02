@@ -105,3 +105,19 @@ def test_format_dates(formatter):
     assert 'January' in formatter.format_dates('2020-01-15', 'full')
     assert '01/' in formatter.format_dates('2020-01-15', 'numeric')
     
+    # Test invalid date handling
+    assert formatter.format_dates('invalid-date') == 'invalid-date'
+
+def test_empty_inputs(formatter):
+    """Test handling of empty inputs."""
+    assert formatter._format_experience('') == ''
+    assert formatter._format_education('') == ''
+    assert formatter._format_skills([]) == []
+
+def test_invalid_inputs(formatter):
+    """Test handling of invalid inputs."""
+    with pytest.raises(Exception):
+        formatter.format_resume(None)
+    
+    with pytest.raises(Exception):
+        formatter.apply_style_guide(None)
