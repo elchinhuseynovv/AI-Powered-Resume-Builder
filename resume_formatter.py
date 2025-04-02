@@ -145,3 +145,24 @@ class ResumeFormatter:
             return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:]}"
         else:
             return phone  # Return original if format unknown
+
+    def generate_section_headers(self) -> Dict[str, str]:
+        """Generate consistent section headers."""
+        return {
+            'education': 'Education',
+            'experience': 'Professional Experience',
+            'skills': 'Technical Skills',
+            'projects': 'Notable Projects',
+            'certifications': 'Certifications',
+            'languages': 'Languages',
+            'interests': 'Interests & Activities'
+        }
+
+    def format_dates(self, date_str: str, format_type: str = 'full') -> str:
+        """Format dates consistently."""
+        try:
+            from datetime import datetime
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            return date_obj.strftime(self.date_formats[format_type])
+        except ValueError:
+            return date_str
