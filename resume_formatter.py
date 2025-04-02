@@ -49,3 +49,44 @@ class ResumeFormatter:
             
             experience = '\n'.join(formatted_points)
         
+        # Standardize date formats
+        experience = self._standardize_dates(experience)
+        
+        return experience
+
+    def _format_education(self, education: str) -> str:
+        """Format the education section with consistent structure."""
+        entries = education.split('\n')
+        formatted_entries = []
+        
+        for entry in entries:
+            if entry.strip():
+                # Extract and format components
+                parts = entry.split('-')
+                if len(parts) >= 2:
+                    degree = parts[0].strip()
+                    institution = parts[1].strip()
+                    
+                    # Extract year if present
+                    year_match = re.search(r'\((\d{4})\)', institution)
+                    if year_match:
+                        year = year_match.group(1)
+                        institution = institution.replace(f'({year})', '').strip()
+                        formatted_entry = f"{degree} - {institution} ({year})"
+                    else:
+                        formatted_entry = entry
+                        
+                    formatted_entries.append(formatted_entry)
+                else:
+                    formatted_entries.append(entry)
+        
+        return '\n'.join(formatted_entries)
+
+    def _format_skills(self, skills: List[str]) -> List[str]:
+        """Format and organize skills."""
+        formatted_skills = []
+        
+        for skill in skills:
+            # Remove extra spaces and capitalize appropriately
+            skill = skill.strip()
+            
