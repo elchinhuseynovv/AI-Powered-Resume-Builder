@@ -90,3 +90,29 @@ class ResumeFormatter:
             # Remove extra spaces and capitalize appropriately
             skill = skill.strip()
             
+            # Handle special cases (e.g., programming languages, frameworks)
+            if skill.lower() in ['javascript', 'typescript', 'python', 'java', 'c++']:
+                formatted_skills.append(skill.capitalize())
+            elif skill.lower() in ['react', 'vue', 'angular']:
+                formatted_skills.append(skill[0].upper() + skill[1:])
+            elif skill.lower().startswith('ms '):
+                formatted_skills.append(f"Microsoft {skill[3:].capitalize()}")
+            else:
+                formatted_skills.append(skill.capitalize())
+        
+        return sorted(formatted_skills)
+
+    def _standardize_dates(self, text: str) -> str:
+        """Standardize date formats in text."""
+        # Match common date patterns
+        date_patterns = [
+            (r'(\d{1,2})/(\d{4})', r'\2'),  # MM/YYYY -> YYYY
+            (r'(\w+)\s+(\d{4})', r'\1 \2'),  # Month YYYY
+            (r'(\d{4})-(\d{4})', r'\1 - \2'),  # YYYY-YYYY -> YYYY - YYYY
+        ]
+        
+        formatted_text = text
+        for pattern, replacement in date_patterns:
+            formatted_text = re.sub(pattern, replacement, formatted_text)
+        
+        return formatted_text
