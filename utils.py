@@ -157,3 +157,11 @@ def validate_file_path(file_path: str) -> bool:
     if '..' in file_path or '//' in file_path:
         return False
     
+    # Check for absolute paths
+    if os.path.isabs(file_path):
+        return False
+    
+    # Check allowed extensions
+    allowed_extensions = {'.pdf', '.html', '.json', '.txt'}
+    if not any(file_path.lower().endswith(ext) for ext in allowed_extensions):
+        return False
