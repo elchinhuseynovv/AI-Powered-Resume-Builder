@@ -138,3 +138,22 @@ def save_files(data: Dict[str, Union[str, List[str]]], html_content: str, output
     except Exception as e:
         logger.error(f"File Save Error: {str(e)}")
         return None
+
+def format_phone_number(phone: str) -> str:
+    """Format phone number consistently."""
+    digits = re.sub(r'\D', '', phone)
+    if len(digits) == 10:
+        return f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+    elif len(digits) == 11 and digits[0] == '1':
+        return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:]}"
+    return phone
+
+def validate_file_path(file_path: str) -> bool:
+    """Validate file path for security."""
+    if not file_path:
+        return False
+    
+    # Check for directory traversal attempts
+    if '..' in file_path or '//' in file_path:
+        return False
+    
