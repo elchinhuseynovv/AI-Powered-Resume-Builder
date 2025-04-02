@@ -165,3 +165,5 @@ def validate_file_path(file_path: str) -> bool:
     allowed_extensions = {'.pdf', '.html', '.json', '.txt'}
     if not any(file_path.lower().endswith(ext) for ext in allowed_extensions):
         return False
+    
+    return True
