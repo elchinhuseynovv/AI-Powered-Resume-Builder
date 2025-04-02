@@ -55,3 +55,53 @@ def test_format_skills(formatter):
     """Test skills formatting."""
     skills = ['python', 'Javascript', 'REACT', 'ms excel']
     
+    formatted = formatter._format_skills(skills)
+    
+    assert isinstance(formatted, list)
+    assert 'Python' in formatted
+    assert 'JavaScript' in formatted
+    assert 'React' in formatted
+    assert 'Microsoft Excel' in formatted
+
+def test_standardize_dates(formatter):
+    """Test date standardization."""
+    text = '''01/2020 to 12/2021
+    January 2020
+    2020-2021'''
+    
+    formatted = formatter._standardize_dates(text)
+    
+    assert '2020' in formatted
+    assert '2021' in formatted
+    assert '01/2020' not in formatted
+
+def test_apply_style_guide(formatter, sample_data):
+    """Test style guide application."""
+    styled = formatter.apply_style_guide(sample_data)
+    
+    assert styled['name'] == 'John Doe'
+    assert styled['email'] == 'john@example.com'
+    assert styled['job_title'] == 'Software Developer'
+    assert '(' in styled['phone'] and ')' in styled['phone']
+
+def test_format_phone_number(formatter):
+    """Test phone number formatting."""
+    assert formatter._format_phone_number('1234567890') == '(123) 456-7890'
+    assert formatter._format_phone_number('11234567890') == '+1 (123) 456-7890'
+    assert formatter._format_phone_number('123-456-7890') == '(123) 456-7890'
+
+def test_generate_section_headers(formatter):
+    """Test section header generation."""
+    headers = formatter.generate_section_headers()
+    
+    assert isinstance(headers, dict)
+    assert 'education' in headers
+    assert 'experience' in headers
+    assert 'skills' in headers
+    assert all(isinstance(header, str) for header in headers.values())
+
+def test_format_dates(formatter):
+    """Test date formatting."""
+    assert 'January' in formatter.format_dates('2020-01-15', 'full')
+    assert '01/' in formatter.format_dates('2020-01-15', 'numeric')
+    
