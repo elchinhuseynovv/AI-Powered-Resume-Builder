@@ -109,3 +109,15 @@ def test_invalid_data(analyzer):
     """Test handling of invalid data."""
     with pytest.raises(Exception):
         analyzer.analyze_resume(None)
+
+def test_score_content(analyzer, sample_data):
+    """Test content scoring."""
+    scores = analyzer._score_content(sample_data)
+    
+    assert isinstance(scores, dict)
+    assert 'experience' in scores
+    assert 'skills' in scores
+    assert 'education' in scores
+    assert 'overall_quality' in scores
+    assert all(isinstance(score, int) for score in scores.values())
+    assert all(0 <= score <= 100 for score in scores.values())
