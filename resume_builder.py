@@ -132,3 +132,44 @@ class ResumeBuilder:
             placeholder = f"{{{{ {key} }}}}"
             html_content = html_content.replace(placeholder, str(value))
         return html_content
+
+    def _generate_cover_letter(self, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Generate an AI-powered cover letter."""
+        prompt = f"""
+Write a compelling cover letter for a {data['job_title']} position at {data['company']}.
+Include:
+1. Strong opening paragraph
+2. Skills and experience alignment
+3. Company-specific details
+4. Professional closing
+
+Candidate Info:
+- Name: {data['name']}
+- Experience: {data['experience']}
+- Skills: {', '.join(data['skills'])}
+"""
+        try:
+            response = openai.ChatCompletion.create(
+                model=self.config.AI_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=self.config.AI_TEMPERATURE,
+                max_tokens=self.config.AI_MAX_TOKENS
+            )
+            return response['choices'][0]['message']['content'].strip()
+        except Exception as e:
+            logger.error(f"Cover letter generation error: {str(e)}")
+            return "Error generating cover letter. Please try again later."
+
+    def get_file(self, timestamp: str, file_type: str) -> Optional[str]:
+        """Retrieve a generated file."""
+        if not self._validate_timestamp(timestamp):
+            return None
+            
+        file_mapping = {
+            'pdf': f'resume_{timestamp}.pdf',
+            'html': f'resume_{timestamp}.html',
+            'json': f'resume_{timestamp}.json',
+            'cover_letter': f'cover_letter_{timestamp}.txt',
+            'analysis': f'analysis_{timestamp}.json'
+        }
+        
