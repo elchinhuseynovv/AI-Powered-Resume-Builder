@@ -173,3 +173,19 @@ Candidate Info:
             'analysis': f'analysis_{timestamp}.json'
         }
         
+        if file_type not in file_mapping:
+            return None
+            
+        file_path = os.path.join(self.output_dir, file_mapping[file_type])
+        if not os.path.exists(file_path):
+            return None
+            
+        return file_path
+
+    def _validate_timestamp(self, timestamp: str) -> bool:
+        """Validate timestamp format."""
+        try:
+            datetime.strptime(timestamp, "%Y%m%d_%H%M%S")
+            return True
+        except ValueError:
+            return False
