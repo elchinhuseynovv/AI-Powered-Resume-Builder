@@ -72,3 +72,24 @@ class ResumeBuilder:
             else:
                 sanitized[key] = value
         return sanitized
+
+    def _generate_files(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Generate all resume files."""
+        timestamp = data['timestamp']
+        output = {}
+        
+        try:
+            # Generate HTML content
+            with open('templates/resume_template.html', 'r', encoding='utf-8') as f:
+                template = f.read()
+            html_content = self._fill_template(template, data)
+            
+            # Save files
+            file_paths = {
+                'json': f"resume_{timestamp}.json",
+                'html': f"resume_{timestamp}.html",
+                'pdf': f"resume_{timestamp}.pdf",
+                'cover_letter': f"cover_letter_{timestamp}.txt",
+                'analysis': f"analysis_{timestamp}.json"
+            }
+            
