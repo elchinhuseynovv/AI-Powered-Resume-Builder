@@ -71,3 +71,11 @@ def setup_error_handlers(app):
             'message': 'Internal server error',
             'error_type': 'InternalServerError'
         }), 500
+
+    @app.errorhandler(ResumeBuilderError)
+    def handle_resume_builder_error(error):
+        return handle_error(error)
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(error):
+        return handle_error(error)
