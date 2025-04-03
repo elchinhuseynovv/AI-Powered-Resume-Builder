@@ -43,3 +43,31 @@ def handle_error(error: Exception) -> Dict[str, Union[bool, str, int]]:
         'error_type': error.__class__.__name__
     }
     
+    return jsonify(response), status_code
+
+def setup_error_handlers(app):
+    """Set up Flask error handlers."""
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({
+            'success': False,
+            'message': 'Resource not found',
+            'error_type': 'NotFoundError'
+        }), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed_error(error):
+        return jsonify({
+            'success': False,
+            'message': 'Method not allowed',
+            'error_type': 'MethodNotAllowedError'
+        }), 405
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        return jsonify({
+            'success': False,
+            'message': 'Internal server error',
+            'error_type': 'InternalServerError'
+        }), 500
