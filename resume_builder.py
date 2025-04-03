@@ -93,3 +93,42 @@ class ResumeBuilder:
                 'analysis': f"analysis_{timestamp}.json"
             }
             
+            # Save JSON
+            json_path = os.path.join(self.output_dir, file_paths['json'])
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            output['json'] = file_paths['json']
+            
+            # Save HTML
+            html_path = os.path.join(self.output_dir, file_paths['html'])
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            output['html'] = file_paths['html']
+            
+            # Generate PDF
+            pdf_path = os.path.join(self.output_dir, file_paths['pdf'])
+            HTML(string=html_content).write_pdf(pdf_path)
+            output['pdf'] = file_paths['pdf']
+            
+            # Generate cover letter
+            cover_letter = self._generate_cover_letter(data)
+            cover_letter_path = os.path.join(self.output_dir, file_paths['cover_letter'])
+            with open(cover_letter_path, 'w', encoding='utf-8') as f:
+                f.write(cover_letter)
+            output['cover_letter'] = file_paths['cover_letter']
+            
+            return output
+            
+        except Exception as e:
+            logger.error(f"File generation error: {str(e)}")
+            raise
+
+    def _fill_template(self, template: str, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Fill HTML template with resume data."""
+        html_content = template
+        for key, value in data.items():
+            if isinstance(value, list):
+                value = ', '.join(value)
+            placeholder = f"{{{{ {key} }}}}"
+            html_content = html_content.replace(placeholder, str(value))
+        return html_content
