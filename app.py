@@ -361,3 +361,26 @@ def download_file(timestamp, file_type):
         if file_type not in ALLOWED_FILE_TYPES:
             abort(400, description="Invalid file type")
         
+        file_mapping = {
+            'pdf': f'output/resume_{timestamp}.pdf',
+            'html': f'output/resume_{timestamp}.html',
+            'json': f'output/resume_{timestamp}.json',
+            'cover_letter': f'output/cover_letter_{timestamp}.txt',
+            'analysis': f'output/analysis_{timestamp}.json'
+        }
+        
+        file_path = file_mapping[file_type]
+        
+        # Validate file path
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            abort(404, description="File not found")
+        
+        # Ensure file is within allowed directory
+        if not os.path.abspath(file_path).startswith(os.path.abspath(OUTPUT_DIR)):
+            abort(403, description="Access denied")
+        
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=os.path.basename(file_path)
+        )
