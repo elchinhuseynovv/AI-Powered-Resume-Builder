@@ -392,3 +392,47 @@ class ResumeAnalyzer:
                 issues.append('Ensure all major sections have clear headings')
                 score -= 15
             
+            return {
+                'score': max(score, 0),
+                'issues': issues,
+                'is_ats_friendly': score >= 80,
+                'recommendations': self._generate_ats_recommendations(issues)
+            }
+        except Exception as e:
+            logger.error(f"ATS compatibility check error: {e}")
+            return {
+                'score': 0,
+                'issues': ['Error analyzing ATS compatibility'],
+                'is_ats_friendly': False,
+                'recommendations': []
+            }
+
+    def _generate_ats_recommendations(self, issues: List[str]) -> List[str]:
+        """Generate ATS-specific recommendations."""
+        recommendations = []
+        
+        if issues:
+            recommendations.extend([
+                "Use standard section headings (Experience, Education, Skills)",
+                "Avoid complex formatting and special characters",
+                "Use common job titles and industry-standard terms",
+                "Include a skills section with relevant keywords"
+            ])
+        
+        return recommendations
+
+    def _analyze_industry_alignment(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Analyze alignment with industry keywords."""
+        try:
+            text = f"{data['experience'].lower()} {' '.join(data['skills']).lower()}"
+            matches = {}
+            
+            for industry, keywords in self.industry_keywords.items():
+                matched_keywords = [k for k in keywords if k in text]
+                coverage = len(matched_keywords) / len(keywords)
+                matches[industry] = {
+                    'match_score': round(coverage * 100, 2),
+                    'matched_keywords': matched_keywords,
+                    'missing_keywords': list(set(keywords) - set(matched_keywords))
+                }
+            
