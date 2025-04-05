@@ -776,3 +776,24 @@ class ResumeFormatter:
                 {''.join(projects_html)}
             </section>
         """
+
+    def _generate_certifications_section(self, certifications: List[Dict]) -> str:
+        """Generate HTML for the certifications section."""
+        certs_html = []
+        
+        for cert in certifications:
+            certs_html.append(f"""
+                <div class="certification-item">
+                    <h3>{cert['name']}</h3>
+                    <p>Issuer: {cert['issuer']}</p>
+                    <p>Date: {cert['date']}</p>
+                    {f'<p>ID: {cert["id"]}</p>' if cert.get('id') else ''}
+                </div>
+            """)
+        
+        return f"""
+            <section class="section">
+                <h2 class="section-title">Certifications</h2>
+                {''.join(certs_html)}
+            </section>
+        """
