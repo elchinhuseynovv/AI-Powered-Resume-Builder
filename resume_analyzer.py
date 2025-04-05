@@ -226,3 +226,50 @@ class ResumeAnalyzer:
                 else:
                     categories['other'].append(skill)
             
+            return {
+                'categorized_skills': categories,
+                'skill_distribution': {
+                    category: len(skills) 
+                    for category, skills in categories.items()
+                },
+                'total_skills': len(skills),
+                'skill_balance_score': self._calculate_skill_balance(categories)
+            }
+        except Exception as e:
+            logger.error(f"Technical skills analysis error: {e}")
+            return {
+                'categorized_skills': {},
+                'skill_distribution': {},
+                'total_skills': 0,
+                'skill_balance_score': 0
+            }
+
+    def _calculate_skill_balance(self, categories: Dict[str, List[str]]) -> float:
+        """Calculate balance score for technical skills distribution."""
+        total_skills = sum(len(skills) for skills in categories.values())
+        if total_skills == 0:
+            return 0
+            
+        # Calculate ideal distribution percentages
+        ideal_distribution = {
+            'programming_languages': 0.25,
+            'frameworks': 0.25,
+            'tools': 0.20,
+            'databases': 0.15,
+            'cloud': 0.10,
+            'other': 0.05
+        }
+        
+        # Calculate actual distribution
+        actual_distribution = {
+            category: len(skills) / total_skills
+            for category, skills in categories.items()
+        }
+        
+        # Calculate balance score (100 = perfect balance, 0 = completely unbalanced)
+        balance_score = 100 - sum(
+            abs(ideal_distribution[cat] - actual_distribution.get(cat, 0)) * 100
+            for cat in ideal_distribution
+        )
+        
+        return max(0, min(100, balance_score))
