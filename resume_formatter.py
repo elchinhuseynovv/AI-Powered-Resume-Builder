@@ -531,3 +531,115 @@ class ResumeFormatter:
             </html>
             """
             
+            # Pretty print HTML
+            soup = BeautifulSoup(html, 'html.parser')
+            return soup.prettify()
+        except Exception as e:
+            logger.error(f"HTML generation error: {e}")
+            return ""
+
+    def _generate_css(self) -> str:
+        """Generate CSS styles for the resume."""
+        return f"""
+            :root {{
+                --primary-color: {self.style_config['primary_color']};
+                --secondary-color: {self.style_config['secondary_color']};
+                --text-color: {self.style_config['text_color']};
+                --background-color: {self.style_config['background_color']};
+                --accent-color: {self.style_config['accent_color']};
+            }}
+            
+            body {{
+                font-family: {self.style_config['font_family']};
+                line-height: 1.6;
+                color: var(--text-color);
+                background-color: var(--background-color);
+                margin: 0;
+                padding: 40px;
+            }}
+            
+            .resume {{
+                max-width: 850px;
+                margin: 0 auto;
+                background-color: white;
+                padding: 40px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }}
+            
+            .header {{
+                text-align: center;
+                margin-bottom: {self.style_config['spacing']['section']};
+                border-bottom: 2px solid var(--primary-color);
+                padding-bottom: 20px;
+            }}
+            
+            .name {{
+                font-size: 2.5em;
+                color: var(--secondary-color);
+                margin: 0;
+            }}
+            
+            .contact {{
+                color: var(--text-color);
+                margin-top: 10px;
+            }}
+            
+            .section {{
+                margin: {self.style_config['spacing']['section']} 0;
+            }}
+            
+            .section-title {{
+                color: var(--secondary-color);
+                font-size: 1.5em;
+                margin-bottom: 15px;
+                border-bottom: 2px solid var(--primary-color);
+                padding-bottom: 5px;
+            }}
+            
+            .experience-item {{
+                margin-bottom: {self.style_config['spacing']['item']};
+            }}
+            
+            .skill-category {{
+                margin-bottom: {self.style_config['spacing']['item']};
+            }}
+            
+            .skill-list {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                list-style: none;
+                padding: 0;
+            }}
+            
+            .skill-item {{
+                background-color: var(--primary-color);
+                color: white;
+                padding: 5px 15px;
+                border-radius: 15px;
+                font-size: 0.9em;
+            }}
+            
+            @media print {{
+                body {{
+                    padding: 0;
+                    background: none;
+                }}
+                
+                .resume {{
+                    box-shadow: none;
+                    padding: 20px;
+                }}
+                
+                .skill-item {{
+                    border: 1px solid var(--primary-color);
+                    color: var(--primary-color);
+                    background: none;
+                }}
+            }}
+            
+            @page {{
+                margin: 20mm;
+            }}
+        """
