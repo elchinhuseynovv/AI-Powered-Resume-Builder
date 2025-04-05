@@ -797,3 +797,12 @@ class ResumeFormatter:
                 {''.join(certs_html)}
             </section>
         """
+
+    def export_json(self, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Export resume data as formatted JSON."""
+        try:
+            formatted_data = self.format_resume(data)
+            return json.dumps(formatted_data, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"JSON export error: {e}")
+            return ""
