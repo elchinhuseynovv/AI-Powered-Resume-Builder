@@ -308,3 +308,40 @@ class ResumeAnalyzer:
                         elif pattern_name == 'impact':
                             metrics['impact_statements'] += 1
             
+            # Calculate impact score
+            total_sentences = len(sentences)
+            if total_sentences > 0:
+                impact_score = sum(metrics.values()) / (total_sentences * 2) * 100  # Normalize to 100
+            else:
+                impact_score = 0
+            
+            return {
+                'metrics': metrics,
+                'impact_score': round(min(100, impact_score), 2),
+                'recommendations': self._generate_impact_recommendations(metrics, total_sentences)
+            }
+        except Exception as e:
+            logger.error(f"Experience impact analysis error: {e}")
+            return {
+                'metrics': {},
+                'impact_score': 0,
+                'recommendations': []
+            }
+
+    def _generate_impact_recommendations(self, metrics: Dict[str, int], total_sentences: int) -> List[str]:
+        """Generate recommendations based on impact analysis."""
+        recommendations = []
+        
+        if metrics['quantified_achievements'] / total_sentences < 0.3:
+            recommendations.append("Add more quantifiable achievements (numbers, percentages, or dollar amounts)")
+        
+        if metrics['leadership_indicators'] == 0:
+            recommendations.append("Include examples of leadership or team coordination experience")
+        
+        if metrics['technical_implementations'] / total_sentences < 0.25:
+            recommendations.append("Add more specific technical implementation details")
+        
+        if metrics['impact_statements'] / total_sentences < 0.4:
+            recommendations.append("Focus more on the impact and results of your work")
+        
+        return recommendations
