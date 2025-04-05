@@ -431,3 +431,27 @@ def analyze_resume():
             'success': False,
             'message': 'An error occurred while analyzing the resume'
         }), 500
+
+@app.route('/download/<timestamp>/<file_type>')
+def download_file(timestamp, file_type):
+    """Download files with improved security"""
+    try:
+        # Validate timestamp format
+        if not re.match(r'^\d{8}_\d{6}$', timestamp):
+            abort(400, description="Invalid timestamp format")
+        
+        # Validate file type
+        if file_type not in ALLOWED_FILE_TYPES:
+            abort(400, description="Invalid file type")
+        
+        # Secure the filename
+        safe_timestamp = secure_filename(timestamp)
+        
+        file_mapping = {
+            'pdf': f'resume_{safe_timestamp}.pdf',
+            'html': f'resume_{safe_timestamp}.html',
+            'json': f'resume_{safe_timestamp}.json',
+            'cover_letter': f'cover_letter_{safe_timestamp}.txt',
+            'analysis': f'analysis_{safe_timestamp}.json'
+        }
+        
