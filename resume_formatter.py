@@ -463,3 +463,32 @@ class ResumeFormatter:
             # Remove all non-numeric characters
             digits = re.sub(r'\D', '', phone)
             
+            # Format based on length
+            if len(digits) == 10:
+                return f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+            elif len(digits) == 11 and digits[0] == '1':
+                return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:]}"
+            else:
+                return phone
+        except Exception as e:
+            logger.error(f"Phone number formatting error: {e}")
+            return phone
+
+    def _format_location(self, location: str) -> str:
+        """Format location consistently."""
+        try:
+            parts = location.strip().split(',')
+            formatted_parts = [part.strip().title() for part in parts]
+            return ', '.join(formatted_parts)
+        except Exception as e:
+            logger.error(f"Location formatting error: {e}")
+            return location
+
+    def _format_social_link(self, link: str, platform: str) -> str:
+        """Format social media links consistently."""
+        try:
+            link = link.strip().lower()
+            
+            # Remove protocol if present
+            link = re.sub(r'^https?://', '', link)
+            
