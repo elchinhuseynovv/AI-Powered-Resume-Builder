@@ -436,3 +436,22 @@ class ResumeAnalyzer:
                     'missing_keywords': list(set(keywords) - set(matched_keywords))
                 }
             
+            # Find best match
+            best_match = max(matches.items(), key=lambda x: x[1]['match_score'])
+            
+            return {
+                'industry_matches': matches,
+                'best_match': {
+                    'industry': best_match[0],
+                    'score': best_match[1]['match_score'],
+                    'matched_keywords': best_match[1]['matched_keywords']
+                },
+                'recommendations': self._generate_industry_recommendations(best_match)
+            }
+        except Exception as e:
+            logger.error(f"Industry alignment analysis error: {e}")
+            return {
+                'industry_matches': {},
+                'best_match': None,
+                'recommendations': []
+            }
