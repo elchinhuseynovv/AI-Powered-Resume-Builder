@@ -322,3 +322,73 @@ class ResumeFormatter:
             if not summary:
                 return ""
             
+            # Clean and normalize text
+            summary = summary.strip()
+            
+            # Ensure proper sentence structure
+            sentences = [s.strip() for s in summary.split('.') if s.strip()]
+            formatted_sentences = []
+            
+            for sentence in sentences:
+                # Capitalize first letter if needed
+                if sentence and not sentence[0].isupper():
+                    sentence = sentence[0].upper() + sentence[1:]
+                # Add period if missing
+                if not sentence.endswith(('.', '!', '?')):
+                    sentence += '.'
+                formatted_sentences.append(sentence)
+            
+            return ' '.join(formatted_sentences)
+        except Exception as e:
+            logger.error(f"Summary formatting error: {e}")
+            return summary
+
+    def _format_projects(self, projects: Union[str, List[Dict]]) -> List[Dict]:
+        """Format projects section with consistent structure."""
+        try:
+            if isinstance(projects, str):
+                # Parse string into structured format
+                lines = projects.split('\n')
+                formatted_projects = []
+                current_project = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        if current_project:
+                            formatted_projects.append(current_project)
+                            current_project = {}
+                        continue
+                    
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        key = key.lower().strip()
+                        value = value.strip()
+                        
+                        if key == 'name':
+                            current_project['name'] = value
+                        elif key in ['description', 'technologies', 'link']:
+                            current_project[key] = value
+                
+                if current_project:
+                    formatted_projects.append(current_project)
+                
+                return formatted_projects
+            elif isinstance(projects, list):
+                # Format existing structured data
+                return [{
+                    'name': project.get('name', '').strip(),
+                    'description': project.get('description', '').strip(),
+                    'technologies': project.get('technologies', '').strip(),
+                    'link': project.get('link', '').strip()
+                } for project in projects]
+            else:
+                return []
+        except Exception as e:
+            logger.error(f"Projects formatting error: {e}")
+            return []
+
+    def _format_certifications(self, certifications: Union[str, List[Dict]]) -> List[Dict]:
+        """Format certifications section."""
+        try:
+            if isinstance(certifications, str):
