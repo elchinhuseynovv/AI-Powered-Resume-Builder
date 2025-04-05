@@ -455,3 +455,28 @@ def download_file(timestamp, file_type):
             'analysis': f'analysis_{safe_timestamp}.json'
         }
         
+        file_path = os.path.join(OUTPUT_DIR, file_mapping[file_type])
+        
+        # Validate file path
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            abort(404, description="File not found")
+        
+        # Ensure file is within allowed directory
+        if not os.path.abspath(file_path).startswith(os.path.abspath(OUTPUT_DIR)):
+            abort(403, description="Access denied")
+        
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=file_mapping[file_type]
+        )
+    except Exception as e:
+        logger.error(f"File Download Error: {str(e)}")
+        abort(500, description="Error downloading file")
+
+if __name__ == '__main__':
+    # Check for required environment variables
+    if not os.getenv("OPENAI_API_KEY"):
+        logger.error("OPENAI_API_KEY environment variable is not set")
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+    
