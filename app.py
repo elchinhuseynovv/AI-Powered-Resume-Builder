@@ -480,3 +480,8 @@ if __name__ == '__main__':
         logger.error("OPENAI_API_KEY environment variable is not set")
         raise ValueError("OPENAI_API_KEY environment variable is not set")
     
+    # Create output directory
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    # Run the application
+    app.run(debug=True)
