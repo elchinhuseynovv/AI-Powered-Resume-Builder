@@ -492,3 +492,42 @@ class ResumeFormatter:
             # Remove protocol if present
             link = re.sub(r'^https?://', '', link)
             
+            # Format based on platform
+            if platform == 'linkedin':
+                if not link.startswith('linkedin.com'):
+                    link = f"linkedin.com/in/{link.split('/')[-1]}"
+            elif platform == 'github':
+                if not link.startswith('github.com'):
+                    link = f"github.com/{link.split('/')[-1]}"
+            
+            return f"https://{link}"
+        except Exception as e:
+            logger.error(f"Social link formatting error: {e}")
+            return link
+
+    def generate_html(self, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Generate HTML version of the resume."""
+        try:
+            formatted_data = self.format_resume(data)
+            
+            # Create base HTML structure
+            html = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>{formatted_data['name']} - Resume</title>
+                <style>
+                    {self._generate_css()}
+                </style>
+            </head>
+            <body>
+                <div class="resume">
+                    {self._generate_header(formatted_data)}
+                    {self._generate_sections(formatted_data)}
+                </div>
+            </body>
+            </html>
+            """
+            
