@@ -387,3 +387,14 @@ def download_file(timestamp, file_type):
     except Exception as e:
         logger.error(f"File Download Error: {str(e)}")
         abort(500, description="Error downloading file")
+
+if __name__ == '__main__':
+    # Check for required environment variables
+    if not os.getenv("OPENAI_API_KEY"):
+        logger.warning("OPENAI_API_KEY not found in environment variables")
+    
+    # Create output directory
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    # Run the application
+    app.run(debug=True)
