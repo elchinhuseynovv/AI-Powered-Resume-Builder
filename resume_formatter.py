@@ -392,3 +392,52 @@ class ResumeFormatter:
         """Format certifications section."""
         try:
             if isinstance(certifications, str):
+                # Parse string into structured format
+                lines = certifications.split('\n')
+                formatted_certs = []
+                current_cert = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        if current_cert:
+                            formatted_certs.append(current_cert)
+                            current_cert = {}
+                        continue
+                    
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        key = key.lower().strip()
+                        value = value.strip()
+                        
+                        if key == 'name':
+                            current_cert['name'] = value
+                        elif key in ['issuer', 'date', 'id']:
+                            current_cert[key] = value
+                
+                if current_cert:
+                    formatted_certs.append(current_cert)
+                
+                return formatted_certs
+            elif isinstance(certifications, list):
+                # Format existing structured data
+                return [{
+                    'name': cert.get('name', '').strip(),
+                    'issuer': cert.get('issuer', '').strip(),
+                    'date': self._standardize_dates(cert.get('date', '')),
+                    'id': cert.get('id', '').strip()
+                } for cert in certifications]
+            else:
+                return []
+        except Exception as e:
+            logger.error(f"Certifications formatting error: {e}")
+            return []
+
+    def _standardize_dates(self, date_str: str) -> str:
+        """Standardize date formats throughout the resume."""
+        try:
+            # Handle date ranges
+            if ' - ' in date_str:
+                start, end = date_str.split(' - ')
+                return f"{self._standardize_dates(start)} - {self._standardize_dates(end)}"
+            
