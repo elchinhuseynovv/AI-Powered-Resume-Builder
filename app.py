@@ -384,3 +384,6 @@ def download_file(timestamp, file_type):
             as_attachment=True,
             download_name=os.path.basename(file_path)
         )
+    except Exception as e:
+        logger.error(f"File Download Error: {str(e)}")
+        abort(500, description="Error downloading file")
