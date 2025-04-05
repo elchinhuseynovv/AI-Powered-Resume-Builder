@@ -233,3 +233,47 @@ class ResumeFormatter:
             'master of business administration': 'MBA'
         }
         
+        # Check for known abbreviations
+        degree_lower = degree.lower()
+        for full, abbr in abbreviations.items():
+            if degree_lower.startswith(full):
+                return degree.replace(full, abbr, 1)
+        
+        # Capitalize each word if no abbreviation found
+        return ' '.join(word.capitalize() for word in degree.split())
+
+    def _format_skills(self, skills: List[str]) -> List[str]:
+        """Format and organize skills with categories."""
+        try:
+            if isinstance(skills, str):
+                skills = [s.strip() for s in skills.split(',')]
+            
+            # Categorize skills
+            categorized_skills = {
+                'Programming Languages': [],
+                'Frameworks & Libraries': [],
+                'Tools & Technologies': [],
+                'Soft Skills': [],
+                'Other': []
+            }
+            
+            for skill in skills:
+                skill = skill.strip()
+                
+                # Determine category and format skill
+                if skill.lower() in ['python', 'java', 'javascript', 'typescript', 'c++', 'ruby', 'php']:
+                    formatted_skill = self._format_programming_language(skill)
+                    categorized_skills['Programming Languages'].append(formatted_skill)
+                elif skill.lower() in ['react', 'angular', 'vue', 'django', 'flask', 'spring', 'node.js']:
+                    formatted_skill = self._format_framework(skill)
+                    categorized_skills['Frameworks & Libraries'].append(formatted_skill)
+                elif skill.lower() in ['git', 'docker', 'kubernetes', 'aws', 'azure']:
+                    formatted_skill = skill.upper() if len(skill) <= 3 else skill.capitalize()
+                    categorized_skills['Tools & Technologies'].append(formatted_skill)
+                elif skill.lower() in ['leadership', 'communication', 'teamwork', 'problem-solving']:
+                    formatted_skill = skill.capitalize()
+                    categorized_skills['Soft Skills'].append(formatted_skill)
+                else:
+                    formatted_skill = skill.capitalize()
+                    categorized_skills['Other'].append(formatted_skill)
+            
