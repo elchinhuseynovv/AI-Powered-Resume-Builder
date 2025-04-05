@@ -681,3 +681,23 @@ class ResumeFormatter:
                 sections_html.append(self._generate_section(section, data[section]))
         
         return '\n'.join(sections_html)
+
+    def _generate_section(self, section_name: str, content: Union[str, List, Dict]) -> str:
+        """Generate HTML for a specific resume section."""
+        section_title = section_name.capitalize()
+        
+        if section_name == 'skills' and isinstance(content, dict):
+            return self._generate_skills_section(content)
+        elif section_name == 'experience':
+            return self._generate_experience_section(content)
+        elif section_name == 'projects':
+            return self._generate_projects_section(content)
+        elif section_name == 'certifications':
+            return self._generate_certifications_section(content)
+        else:
+            return f"""
+                <section class="section">
+                    <h2 class="section-title">{section_title}</h2>
+                    <div class="content">{content}</div>
+                </section>
+            """
