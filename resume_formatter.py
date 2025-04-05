@@ -755,3 +755,24 @@ class ResumeFormatter:
                 {''.join(experience_html)}
             </section>
         """
+
+    def _generate_projects_section(self, projects: List[Dict]) -> str:
+        """Generate HTML for the projects section."""
+        projects_html = []
+        
+        for project in projects:
+            projects_html.append(f"""
+                <div class="project-item">
+                    <h3>{project['name']}</h3>
+                    <p>{project['description']}</p>
+                    <p class="technologies">Technologies: {project['technologies']}</p>
+                    {f'<a href="{project["link"]}" target="_blank">View Project</a>' if project.get('link') else ''}
+                </div>
+            """)
+        
+        return f"""
+            <section class="section">
+                <h2 class="section-title">Projects</h2>
+                {''.join(projects_html)}
+            </section>
+        """
