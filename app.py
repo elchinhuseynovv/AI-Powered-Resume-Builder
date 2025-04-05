@@ -414,3 +414,20 @@ def analyze_resume():
                 raise ValueError(f"Missing required field: {field}")
             if not data[field]:
                 raise ValueError(f"Empty field: {field}")
+        
+        analysis = score_resume(data)
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        })
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
+    except Exception as e:
+        logger.error(f"Resume analysis error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while analyzing the resume'
+        }), 500
