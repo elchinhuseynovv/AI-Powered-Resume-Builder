@@ -643,3 +643,41 @@ class ResumeFormatter:
                 margin: 20mm;
             }}
         """
+
+    def _generate_header(self, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Generate HTML for the resume header."""
+        contact_info = data.get('contact', {})
+        
+        return f"""
+            <header class="header">
+                <h1 class="name">{data['name']}</h1>
+                <div class="contact">
+                    {contact_info.get('email', '')} | {contact_info.get('phone', '')}
+                    {f" | {contact_info['location']}" if 'location' in contact_info else ''}
+                </div>
+                <div class="links">
+                    {self._generate_social_links(contact_info)}
+                </div>
+            </header>
+        """
+
+    def _generate_social_links(self, contact_info: Dict[str, str]) -> str:
+        """Generate HTML for social media links."""
+        links = []
+        
+        if 'linkedin' in contact_info:
+            links.append(f'<a href="{contact_info["linkedin"]}" target="_blank">LinkedIn</a>')
+        if 'github' in contact_info:
+            links.append(f'<a href="{contact_info["github"]}" target="_blank">GitHub</a>')
+        
+        return ' | '.join(links) if links else ''
+
+    def _generate_sections(self, data: Dict[str, Union[str, List[str]]]) -> str:
+        """Generate HTML for all resume sections."""
+        sections_html = []
+        
+        for section in self.section_order:
+            if section in data and data[section]:
+                sections_html.append(self._generate_section(section, data[section]))
+        
+        return '\n'.join(sections_html)
