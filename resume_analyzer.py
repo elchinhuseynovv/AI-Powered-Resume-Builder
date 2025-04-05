@@ -455,3 +455,21 @@ class ResumeAnalyzer:
                 'best_match': None,
                 'recommendations': []
             }
+
+    def _generate_industry_recommendations(self, best_match: tuple) -> List[str]:
+        """Generate industry-specific recommendations."""
+        industry, match_data = best_match
+        recommendations = []
+        
+        if match_data['match_score'] < 70:
+            recommendations.append(
+                f"Consider adding more {industry}-specific keywords: "
+                f"{', '.join(match_data['missing_keywords'][:5])}"
+            )
+        
+        if len(match_data['matched_keywords']) < 5:
+            recommendations.append(
+                "Include more industry-standard tools and technologies"
+            )
+        
+        return recommendations
