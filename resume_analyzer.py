@@ -273,3 +273,38 @@ class ResumeAnalyzer:
         )
         
         return max(0, min(100, balance_score))
+
+    def _analyze_experience_impact(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Analyze the impact and effectiveness of experience descriptions."""
+        try:
+            experience = data['experience']
+            sentences = sent_tokenize(experience)
+            
+            # Metrics tracking
+            metrics = {
+                'quantified_achievements': 0,
+                'leadership_indicators': 0,
+                'technical_implementations': 0,
+                'impact_statements': 0
+            }
+            
+            # Patterns for analysis
+            patterns = {
+                'quantified': r'\d+%|\$\d+|\d+ [a-zA-Z]+',
+                'leadership': r'led|managed|supervised|mentored|coordinated|directed',
+                'technical': r'implemented|developed|built|designed|architected',
+                'impact': r'improved|increased|reduced|enhanced|optimized|streamlined'
+            }
+            
+            for sentence in sentences:
+                for pattern_name, pattern in patterns.items():
+                    if re.search(pattern, sentence, re.IGNORECASE):
+                        if pattern_name == 'quantified':
+                            metrics['quantified_achievements'] += 1
+                        elif pattern_name == 'leadership':
+                            metrics['leadership_indicators'] += 1
+                        elif pattern_name == 'technical':
+                            metrics['technical_implementations'] += 1
+                        elif pattern_name == 'impact':
+                            metrics['impact_statements'] += 1
+            
