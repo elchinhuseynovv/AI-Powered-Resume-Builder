@@ -369,3 +369,26 @@ class ResumeAnalyzer:
         try:
             issues = []
             score = 100
+            
+            # Check content length
+            if len(data['experience'].split()) < 50:
+                issues.append('Experience section might be too brief for ATS parsing')
+                score -= 20
+            
+            # Check skills format
+            if isinstance(data['skills'], str):
+                if ',' not in data['skills']:
+                    issues.append('Skills should be comma-separated for better ATS parsing')
+                    score -= 15
+            
+            # Check for common formatting issues
+            if any(char in data['experience'] for char in ['•', '►', '→']):
+                issues.append('Replace special characters with standard bullet points')
+                score -= 10
+            
+            # Check for proper section headings
+            if not all(section in data['experience'].lower() 
+                      for section in ['experience', 'education', 'skills']):
+                issues.append('Ensure all major sections have clear headings')
+                score -= 15
+            
