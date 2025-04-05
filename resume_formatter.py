@@ -701,3 +701,57 @@ class ResumeFormatter:
                     <div class="content">{content}</div>
                 </section>
             """
+
+    def _generate_skills_section(self, skills: Dict[str, List[str]]) -> str:
+        """Generate HTML for the skills section."""
+        skills_html = []
+        
+        for category, skill_list in skills.items():
+            skills_html.append(f"""
+                <div class="skill-category">
+                    <h3>{category}</h3>
+                    <ul class="skill-list">
+                        {' '.join(f'<li class="skill-item">{skill}</li>' for skill in skill_list)}
+                    </ul>
+                </div>
+            """)
+        
+        return f"""
+            <section class="section">
+                <h2 class="section-title">Skills</h2>
+                {''.join(skills_html)}
+            </section>
+        """
+
+    def _generate_experience_section(self, experience: str) -> str:
+        """Generate HTML for the experience section."""
+        entries = experience.split('\n\n')
+        experience_html = []
+        
+        for entry in entries:
+            lines = entry.split('\n')
+            if not lines:
+                continue
+            
+            company = lines[0]
+            position = lines[1] if len(lines) > 1 else ''
+            date = lines[2] if len(lines) > 2 else ''
+            bullets = lines[3:] if len(lines) > 3 else []
+            
+            experience_html.append(f"""
+                <div class="experience-item">
+                    <h3>{company}</h3>
+                    <div class="position">{position}</div>
+                    <div class="date">{date}</div>
+                    <ul>
+                        {' '.join(f'<li>{bullet}</li>' for bullet in bullets)}
+                    </ul>
+                </div>
+            """)
+        
+        return f"""
+            <section class="section">
+                <h2 class="section-title">Experience</h2>
+                {''.join(experience_html)}
+            </section>
+        """
