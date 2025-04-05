@@ -1,9 +1,11 @@
 """Resume analysis module for enhanced resume evaluation."""
 import re
-from typing import Dict, List, Union
-from nltk.tokenize import word_tokenize
+from typing import Dict, List, Union, Optional
+from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
+from nltk.tag import pos_tag
 import logging
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +21,20 @@ class ResumeAnalyzer:
         ]
         
         self.industry_keywords = {
-            'software': ['python', 'javascript', 'react', 'node', 'aws', 'docker'],
-            'marketing': ['seo', 'analytics', 'social media', 'content', 'campaign'],
-            'finance': ['accounting', 'budget', 'financial analysis', 'forecasting'],
-            'sales': ['revenue', 'sales', 'negotiation', 'client', 'business development']
+            'software': ['python', 'javascript', 'react', 'node', 'aws', 'docker', 'kubernetes', 'microservices'],
+            'data_science': ['python', 'machine learning', 'ai', 'deep learning', 'tensorflow', 'pytorch', 'nlp'],
+            'devops': ['aws', 'docker', 'kubernetes', 'jenkins', 'terraform', 'ansible', 'ci/cd'],
+            'frontend': ['react', 'vue', 'angular', 'javascript', 'typescript', 'css', 'html'],
+            'backend': ['python', 'java', 'node.js', 'sql', 'rest api', 'microservices', 'redis'],
+            'marketing': ['seo', 'analytics', 'social media', 'content', 'campaign', 'marketing automation'],
+            'finance': ['accounting', 'budget', 'financial analysis', 'forecasting', 'risk management'],
+            'sales': ['revenue', 'sales', 'negotiation', 'client', 'business development', 'crm']
         }
+        
+        self.soft_skills = [
+            'leadership', 'communication', 'teamwork', 'problem-solving',
+            'analytical', 'creativity', 'adaptability', 'time management'
+        ]
 
     def analyze_resume(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
         """Perform comprehensive resume analysis."""
@@ -34,7 +45,11 @@ class ResumeAnalyzer:
                 'improvement_suggestions': self._generate_suggestions(data),
                 'ats_compatibility': self._check_ats_compatibility(data),
                 'industry_alignment': self._analyze_industry_alignment(data),
-                'action_verbs_usage': self._analyze_action_verbs(data['experience'])
+                'action_verbs_usage': self._analyze_action_verbs(data['experience']),
+                'readability_score': self._calculate_readability_score(data),
+                'soft_skills_analysis': self._analyze_soft_skills(data),
+                'technical_skills_depth': self._analyze_technical_skills(data),
+                'experience_impact': self._analyze_experience_impact(data)
             }
             return analysis
         except Exception as e:
@@ -42,152 +57,172 @@ class ResumeAnalyzer:
             return {'error': str(e)}
 
     def _analyze_keywords(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
-        """Analyze keyword usage and relevance."""
-        text = f"{data['experience']} {' '.join(data['skills'])}"
-        tokens = word_tokenize(text.lower())
-        stop_words = set(stopwords.words('english'))
-        
-        keywords = [word for word in tokens if word.isalnum() and word not in stop_words]
-        keyword_freq = {}
-        
-        for word in keywords:
-            keyword_freq[word] = keyword_freq.get(word, 0) + 1
+        """Analyze keyword usage and relevance with improved metrics."""
+        try:
+            text = f"{data['experience']} {' '.join(data['skills'])}"
+            tokens = word_tokenize(text.lower())
+            stop_words = set(stopwords.words('english'))
             
-        return {
-            'top_keywords': sorted(keyword_freq.items(), key=lambda x: x[1], reverse=True)[:10],
-            'keyword_density': len(set(keywords)) / len(keywords) if keywords else 0,
-            'unique_keywords': len(set(keywords))
-        }
-
-    def _score_content(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
-        """Score different aspects of the resume."""
-        scores = {
-            'experience': self._score_experience(data['experience']),
-            'skills': min(len(data['skills']) * 10, 100),
-            'education': len(data['education'].split('\n')) * 20,
-            'overall_quality': self._calculate_overall_quality(data)
-        }
-        
-        return scores
-
-    def _score_experience(self, experience: str) -> int:
-        """Score the experience section based on various factors."""
-        words = experience.split()
-        metrics = re.findall(r'\d+%|\$\d+|\d+ years?', experience.lower())
-        action_verbs_used = sum(1 for word in words if word.lower() in self.action_verbs)
-        
-        length_score = min(len(words) / 10, 50)
-        action_verbs_score = min(action_verbs_used * 5, 30)
-        metrics_score = min(len(metrics) * 10, 20)
-        
-        total_score = length_score + action_verbs_score + metrics_score
-        return min(int(total_score), 100)
-
-    def _calculate_overall_quality(self, data: Dict[str, Union[str, List[str]]]) -> int:
-        """Calculate overall resume quality score."""
-        scores = []
-        
-        # Experience quality
-        exp_score = self._score_experience(data['experience'])
-        scores.append(exp_score * 0.4)  # 40% weight
-        
-        # Skills breadth
-        skills_score = min(len(data['skills']) * 10, 100)
-        scores.append(skills_score * 0.3)  # 30% weight
-        
-        # Education completeness
-        edu_score = min(len(data['education'].split('\n')) * 25, 100)
-        scores.append(edu_score * 0.2)  # 20% weight
-        
-        # Contact information completeness
-        contact_score = 100 if all([data['email'], data['phone']]) else 50
-        scores.append(contact_score * 0.1)  # 10% weight
-        
-        return min(int(sum(scores)), 100)
-
-    def _check_ats_compatibility(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
-        """Check resume compatibility with ATS systems."""
-        issues = []
-        score = 100
-        
-        # Check for common ATS issues
-        if len(data['experience'].split()) < 50:
-            issues.append('Experience section might be too brief for ATS parsing')
-            score -= 20
+            # Extract keywords with POS tagging
+            tagged_words = pos_tag(tokens)
+            keywords = [
+                word.lower() for word, tag in tagged_words 
+                if word.isalnum() and word not in stop_words 
+                and tag in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'VB', 'VBD', 'VBG', 'VBN']
+            ]
             
-        if len(data['skills']) < 5:
-            issues.append('Add more relevant skills for better ATS matching')
-            score -= 15
+            # Calculate keyword frequency and density
+            keyword_freq = Counter(keywords)
+            total_words = len(tokens)
+            keyword_density = len(set(keywords)) / total_words if total_words > 0 else 0
             
-        if not re.search(r'\d+', data['experience']):
-            issues.append('Include more quantifiable achievements')
-            score -= 10
+            # Identify key phrases (bigrams)
+            bigrams = list(zip(keywords[:-1], keywords[1:]))
+            bigram_freq = Counter(bigrams)
             
-        return {
-            'score': max(score, 0),
-            'issues': issues,
-            'is_ats_friendly': score >= 80
-        }
+            return {
+                'top_keywords': sorted(keyword_freq.items(), key=lambda x: x[1], reverse=True)[:10],
+                'top_phrases': sorted(bigram_freq.items(), key=lambda x: x[1], reverse=True)[:5],
+                'keyword_density': keyword_density,
+                'unique_keywords': len(set(keywords)),
+                'total_keywords': len(keywords)
+            }
+        except Exception as e:
+            logger.error(f"Keyword analysis error: {e}")
+            return {
+                'top_keywords': [],
+                'top_phrases': [],
+                'keyword_density': 0,
+                'unique_keywords': 0,
+                'total_keywords': 0
+            }
 
-    def _analyze_industry_alignment(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
-        """Analyze alignment with industry keywords."""
-        text = f"{data['experience'].lower()} {' '.join(data['skills']).lower()}"
-        matches = {}
+    def _calculate_readability_score(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Calculate readability metrics for the resume."""
+        try:
+            text = data['experience']
+            sentences = sent_tokenize(text)
+            words = word_tokenize(text)
+            
+            # Calculate basic metrics
+            avg_sentence_length = len(words) / len(sentences) if sentences else 0
+            avg_word_length = sum(len(word) for word in words) / len(words) if words else 0
+            
+            # Calculate Flesch Reading Ease score
+            total_syllables = sum(self._count_syllables(word) for word in words)
+            if len(sentences) > 0 and len(words) > 0:
+                flesch_score = 206.835 - 1.015 * (len(words) / len(sentences)) - 84.6 * (total_syllables / len(words))
+            else:
+                flesch_score = 0
+                
+            return {
+                'avg_sentence_length': round(avg_sentence_length, 2),
+                'avg_word_length': round(avg_word_length, 2),
+                'flesch_score': round(flesch_score, 2),
+                'readability_level': self._get_readability_level(flesch_score)
+            }
+        except Exception as e:
+            logger.error(f"Readability calculation error: {e}")
+            return {
+                'avg_sentence_length': 0,
+                'avg_word_length': 0,
+                'flesch_score': 0,
+                'readability_level': 'Error calculating readability'
+            }
+
+    def _count_syllables(self, word: str) -> int:
+        """Count the number of syllables in a word."""
+        word = word.lower()
+        count = 0
+        vowels = 'aeiouy'
+        on_vowel = False
         
-        for industry, keywords in self.industry_keywords.items():
-            count = sum(1 for keyword in keywords if keyword in text)
-            matches[industry] = {
-                'match_score': min(count * 20, 100),
-                'matched_keywords': [k for k in keywords if k in text]
+        for char in word:
+            is_vowel = char in vowels
+            if is_vowel and not on_vowel:
+                count += 1
+            on_vowel = is_vowel
+            
+        if word.endswith('e'):
+            count -= 1
+        if word.endswith('le') and len(word) > 2:
+            count += 1
+        if count == 0:
+            count = 1
+            
+        return count
+
+    def _get_readability_level(self, score: float) -> str:
+        """Convert Flesch score to readability level."""
+        if score >= 90:
+            return 'Very Easy'
+        elif score >= 80:
+            return 'Easy'
+        elif score >= 70:
+            return 'Fairly Easy'
+        elif score >= 60:
+            return 'Standard'
+        elif score >= 50:
+            return 'Fairly Difficult'
+        elif score >= 30:
+            return 'Difficult'
+        else:
+            return 'Very Difficult'
+
+    def _analyze_soft_skills(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Analyze presence and usage of soft skills."""
+        try:
+            text = data['experience'].lower()
+            found_skills = []
+            
+            for skill in self.soft_skills:
+                if skill in text:
+                    found_skills.append(skill)
+            
+            coverage = len(found_skills) / len(self.soft_skills) * 100
+            
+            return {
+                'identified_skills': found_skills,
+                'coverage_percentage': round(coverage, 2),
+                'missing_important_skills': list(set(self.soft_skills) - set(found_skills)),
+                'recommendations': self._generate_soft_skills_recommendations(found_skills)
+            }
+        except Exception as e:
+            logger.error(f"Soft skills analysis error: {e}")
+            return {
+                'identified_skills': [],
+                'coverage_percentage': 0,
+                'missing_important_skills': [],
+                'recommendations': []
+            }
+
+    def _analyze_technical_skills(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Analyze technical skills depth and relevance."""
+        try:
+            skills = data['skills'] if isinstance(data['skills'], list) else data['skills'].split(',')
+            skills = [skill.strip().lower() for skill in skills]
+            
+            # Categorize skills
+            categories = {
+                'programming_languages': [],
+                'frameworks': [],
+                'tools': [],
+                'databases': [],
+                'cloud': [],
+                'other': []
             }
             
-        best_match = max(matches.items(), key=lambda x: x[1]['match_score'])
-        
-        return {
-            'industry_matches': matches,
-            'best_match': {
-                'industry': best_match[0],
-                'score': best_match[1]['match_score']
-            }
-        }
-
-    def _analyze_action_verbs(self, experience: str) -> Dict:
-        """Analyze the usage of action verbs in experience."""
-        words = word_tokenize(experience.lower())
-        used_verbs = [word for word in words if word in self.action_verbs]
-        
-        return {
-            'total_used': len(used_verbs),
-            'unique_used': len(set(used_verbs)),
-            'verbs_found': list(set(used_verbs)),
-            'suggestions': [verb for verb in self.action_verbs if verb not in used_verbs][:5]
-        }
-
-    def _generate_suggestions(self, data: Dict[str, Union[str, List[str]]]) -> List[str]:
-        """Generate detailed improvement suggestions."""
-        suggestions = []
-        
-        # Experience section suggestions
-        exp_words = len(data['experience'].split())
-        if exp_words < 100:
-            suggestions.append('Add more detail to your work experience (aim for 200-300 words)')
-        elif exp_words > 500:
-            suggestions.append('Consider condensing your experience section for better readability')
+            for skill in skills:
+                if skill in ['python', 'java', 'javascript', 'c++', 'ruby', 'php']:
+                    categories['programming_languages'].append(skill)
+                elif skill in ['react', 'angular', 'vue', 'django', 'flask', 'spring']:
+                    categories['frameworks'].append(skill)
+                elif skill in ['git', 'docker', 'kubernetes', 'jenkins']:
+                    categories['tools'].append(skill)
+                elif skill in ['mysql', 'postgresql', 'mongodb', 'redis']:
+                    categories['databases'].append(skill)
+                elif skill in ['aws', 'azure', 'gcp', 'heroku']:
+                    categories['cloud'].append(skill)
+                else:
+                    categories['other'].append(skill)
             
-        # Skills suggestions
-        if len(data['skills']) < 5:
-            suggestions.append('Add more relevant skills (aim for 8-12 key skills)')
-        elif len(data['skills']) > 15:
-            suggestions.append('Consider focusing on your most relevant and strongest skills')
-            
-        # Action verbs usage
-        action_verbs_used = sum(1 for word in data['experience'].split() 
-                               if word.lower() in self.action_verbs)
-        if action_verbs_used < 5:
-            suggestions.append('Use more action verbs to describe your experiences')
-            
-        # Metrics and achievements
-        if not re.search(r'\d+%|\$\d+|\d+ years?', data['experience']):
-            suggestions.append('Add quantifiable achievements (e.g., percentages, numbers, metrics)')
-            
-        return suggestions
