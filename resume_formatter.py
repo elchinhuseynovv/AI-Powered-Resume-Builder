@@ -277,3 +277,48 @@ class ResumeFormatter:
                     formatted_skill = skill.capitalize()
                     categorized_skills['Other'].append(formatted_skill)
             
+            # Remove empty categories and sort skills within categories
+            return {
+                category: sorted(skills)
+                for category, skills in categorized_skills.items()
+                if skills
+            }
+        except Exception as e:
+            logger.error(f"Skills formatting error: {e}")
+            return skills
+
+    def _format_programming_language(self, language: str) -> str:
+        """Format programming language names correctly."""
+        language = language.lower()
+        special_cases = {
+            'javascript': 'JavaScript',
+            'typescript': 'TypeScript',
+            'python': 'Python',
+            'java': 'Java',
+            'c++': 'C++',
+            'c#': 'C#',
+            'php': 'PHP',
+            'ruby': 'Ruby'
+        }
+        return special_cases.get(language, language.capitalize())
+
+    def _format_framework(self, framework: str) -> str:
+        """Format framework names correctly."""
+        framework = framework.lower()
+        special_cases = {
+            'react': 'React',
+            'angular': 'Angular',
+            'vue': 'Vue.js',
+            'node.js': 'Node.js',
+            'django': 'Django',
+            'flask': 'Flask',
+            'spring': 'Spring'
+        }
+        return special_cases.get(framework, framework.capitalize())
+
+    def _format_summary(self, summary: str) -> str:
+        """Format professional summary section."""
+        try:
+            if not summary:
+                return ""
+            
