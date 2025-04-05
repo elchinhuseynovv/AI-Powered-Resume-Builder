@@ -188,3 +188,29 @@ class ResumeFormatter:
             if not education:
                 return ""
             
+            entries = education.split('\n')
+            formatted_entries = []
+            
+            for entry in entries:
+                if not entry.strip():
+                    continue
+                
+                # Parse education entry
+                parts = entry.split('-')
+                if len(parts) >= 2:
+                    degree = parts[0].strip()
+                    institution = parts[1].strip()
+                    
+                    # Extract and format year if present
+                    year_match = re.search(r'\((\d{4})\)', institution)
+                    if year_match:
+                        year = year_match.group(1)
+                        institution = institution.replace(f'({year})', '').strip()
+                        formatted_entry = f"{self._format_degree(degree)} - {institution} ({year})"
+                    else:
+                        formatted_entry = f"{self._format_degree(degree)} - {institution}"
+                    
+                    formatted_entries.append(formatted_entry)
+                else:
+                    formatted_entries.append(entry)
+            
