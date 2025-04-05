@@ -441,3 +441,25 @@ class ResumeFormatter:
                 start, end = date_str.split(' - ')
                 return f"{self._standardize_dates(start)} - {self._standardize_dates(end)}"
             
+            # Handle single dates
+            date_str = date_str.strip()
+            
+            # Try parsing common formats
+            for fmt in ['%m/%Y', '%B %Y', '%b %Y', '%Y']:
+                try:
+                    date_obj = datetime.strptime(date_str, fmt)
+                    return date_obj.strftime('%B %Y')
+                except ValueError:
+                    continue
+            
+            return date_str
+        except Exception as e:
+            logger.error(f"Date standardization error: {e}")
+            return date_str
+
+    def _format_phone_number(self, phone: str) -> str:
+        """Format phone number consistently."""
+        try:
+            # Remove all non-numeric characters
+            digits = re.sub(r'\D', '', phone)
+            
