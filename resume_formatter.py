@@ -214,3 +214,22 @@ class ResumeFormatter:
                 else:
                     formatted_entries.append(entry)
             
+            return '\n'.join(formatted_entries)
+        except Exception as e:
+            logger.error(f"Education formatting error: {e}")
+            return education
+
+    def _format_degree(self, degree: str) -> str:
+        """Format degree with proper abbreviations and capitalization."""
+        degree = degree.strip()
+        
+        # Common degree abbreviations
+        abbreviations = {
+            'bachelor of science': 'BS',
+            'bachelor of arts': 'BA',
+            'master of science': 'MS',
+            'master of arts': 'MA',
+            'doctor of philosophy': 'PhD',
+            'master of business administration': 'MBA'
+        }
+        
