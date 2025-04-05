@@ -345,3 +345,27 @@ class ResumeAnalyzer:
             recommendations.append("Focus more on the impact and results of your work")
         
         return recommendations
+
+    def _generate_soft_skills_recommendations(self, found_skills: List[str]) -> List[str]:
+        """Generate recommendations for soft skills improvement."""
+        critical_skills = {'leadership', 'communication', 'problem-solving'}
+        recommendations = []
+        
+        missing_critical = critical_skills - set(found_skills)
+        if missing_critical:
+            recommendations.append(
+                f"Consider adding examples demonstrating: {', '.join(missing_critical)}"
+            )
+        
+        if len(found_skills) < 5:
+            recommendations.append(
+                "Include more soft skills and provide specific examples of their application"
+            )
+        
+        return recommendations
+
+    def _check_ats_compatibility(self, data: Dict[str, Union[str, List[str]]]) -> Dict:
+        """Check resume compatibility with ATS systems."""
+        try:
+            issues = []
+            score = 100
